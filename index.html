@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BancoPilipinas — Banking Simulation System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0d14;
+  --surface: #111520;
+  --surface2: #1a2035;
+  --surface3: #222b45;
+  --border: #2a3555;
+  --border2: #3a4870;
+  --accent: #3b82f6;
+  --accent2: #1d4ed8;
+  --accent-glow: rgba(59,130,246,0.25);
+  --gold: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+  --orange: #f97316;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --display: 'Playfair Display', serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
+/* ─── SCROLLBARS ─── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+/* ─── LOGIN ─── */
+#loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;
+  background:radial-gradient(ellipse at 30% 50%,rgba(59,130,246,0.12) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 20%,rgba(139,92,246,0.08) 0%,transparent 50%),
+             var(--bg)}
+.login-card{width:420px;padding:48px;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:36px}
+.login-logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.login-logo-text h1{font-family:var(--display);font-size:20px;line-height:1}
+.login-logo-text p{font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.login-form h2{font-size:22px;font-weight:600;margin-bottom:6px}
+.login-form p{color:var(--text3);font-size:14px;margin-bottom:32px}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:8px}
+.form-group input,.form-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;color:var(--text);font-family:var(--font);font-size:14px;transition:border-color 0.2s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:var(--radius-sm);border:none;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;width:100%;justify-content:center}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px var(--accent-glow)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-gold{background:var(--gold);color:#000}
+.login-hint{margin-top:20px;text-align:center;font-size:12px;color:var(--text3)}
+.login-hint code{background:var(--surface3);padding:2px 6px;border-radius:4px;font-family:var(--mono);color:var(--text2)}
+/* ─── MAIN LAYOUT ─── */
+#app{display:none;flex-direction:row;height:100vh;overflow:hidden}
+/* ─── SIDEBAR ─── */
+#sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width 0.3s;position:relative;z-index:100}
+#sidebar.collapsed{width:64px;min-width:64px}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.sidebar-logo-icon{width:36px;height:36px;min-width:36px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.sidebar-logo-text{overflow:hidden;white-space:nowrap}
+.sidebar-logo-text h3{font-family:var(--display);font-size:15px;line-height:1.2}
+.sidebar-logo-text p{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase}
+.sidebar-toggle{position:absolute;right:-12px;top:24px;width:24px;height:24px;background:var(--surface3);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;z-index:101;transition:all 0.2s}
+.sidebar-toggle:hover{background:var(--accent);color:#fff}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px}
+.nav-section{margin-bottom:20px}
+.nav-section-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:8px;white-space:nowrap;overflow:hidden}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;color:var(--text2);white-space:nowrap;overflow:hidden;position:relative}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(139,92,246,0.1));color:var(--accent);border:1px solid rgba(59,130,246,0.3)}
+.nav-item-icon{font-size:18px;min-width:20px;text-align:center}
+.nav-item-text{font-size:13px;font-weight:500}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;min-width:20px;text-align:center}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--surface2)}
+.user-avatar{width:30px;height:30px;min-width:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.user-info-text{overflow:hidden}
+.user-info-text p{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-info-text span{font-size:11px;color:var(--text3)}
+/* ─── MAIN CONTENT ─── */
+#mainArea{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* ─── TOPBAR ─── */
+#topbar{height:60px;min-height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;z-index:50}
+.topbar-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3)}
+.topbar-breadcrumb span{color:var(--text2)}
+.topbar-breadcrumb .active{color:var(--text);font-weight:600}
+.breadcrumb-sep{color:var(--text3)}
+.topbar-search{flex:1;max-width:440px;margin:0 auto;position:relative}
+.topbar-search input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 16px 8px 40px;color:var(--text);font-family:var(--font);font-size:13px}
+.topbar-search input:focus{outline:none;border-color:var(--accent)}
+.topbar-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px}
+#searchResults{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);max-height:300px;overflow-y:auto;z-index:200;display:none}
+.search-item{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;font-size:13px}
+.search-item:hover{background:var(--surface3)}
+.search-item-type{font-size:10px;background:var(--surface3);padding:2px 6px;border-radius:4px;color:var(--text3)}
+.topbar-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.topbar-btn{width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative;transition:all 0.2s}
+.topbar-btn:hover{background:var(--surface3);border-color:var(--accent)}
+.topbar-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.sim-speed-badge{background:var(--surface2);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:4px 12px;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer}
+.tps-counter{font-family:var(--mono);font-size:12px;color:var(--green);background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 12px}
+/* ─── CONTENT AREA ─── */
+#contentArea{flex:1;overflow:hidden;position:relative}
+.page{display:none;height:100%;overflow-y:auto;padding:24px}
+.page.active{display:block}
+/* ─── STATS GRID ─── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:border-color 0.2s}
+.stat-card:hover{border-color:var(--accent)}
+.stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,130,246,0.04) 0%,transparent 100%)}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.stat-value{font-size:28px;font-weight:700;font-family:var(--mono);line-height:1}
+.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}
+.stat-value.gold{color:var(--gold)}
+.stat-value.accent{color:var(--accent)}
+.stat-sub{font-size:12px;color:var(--text3);margin-top:8px;display:flex;align-items:center;gap:4px}
+.stat-icon{position:absolute;right:16px;top:16px;font-size:28px;opacity:0.15}
+.stat-change-up{color:var(--green)}
+.stat-change-down{color:var(--red)}
+/* ─── SECTION HEADERS ─── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-actions{display:flex;gap:8px}
+/* ─── TABLES ─── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{background:var(--surface2);padding:10px 16px;text-align:left;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--text2)}
+td{padding:12px 16px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle}
+tr:hover td{background:var(--surface2)}
+.table-filters{padding:12px 16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--border);background:var(--surface2)}
+.filter-input{background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;color:var(--text);font-family:var(--font);font-size:12px;width:180px}
+.filter-input:focus{outline:none;border-color:var(--accent)}
+/* ─── BADGES ─── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge-active{background:rgba(16,185,129,0.15);color:var(--green)}
+.badge-frozen{background:rgba(59,130,246,0.15);color:var(--accent)}
+.badge-locked{background:rgba(239,68,68,0.15);color:var(--red)}
+.badge-review{background:rgba(245,158,11,0.15);color:var(--gold)}
+.badge-pending{background:rgba(139,92,246,0.15);color:var(--purple)}
+.badge-paid{background:rgba(16,185,129,0.15);color:var(--green)}
+.badge-overdue{background:rgba(239,68,68,0.15);color:var(--red)}
+.badge-default{background:rgba(239,68,68,0.2);color:#ff6b6b}
+.badge-flagged{background:rgba(249,115,22,0.15);color:var(--orange)}
+.badge-kyc-verified{background:rgba(16,185,129,0.15);color:var(--green)}
+.badge-kyc-pending{background:rgba(245,158,11,0.15);color:var(--gold)}
+.badge-kyc-rejected{background:rgba(239,68,68,0.15);color:var(--red)}
+.badge-high{background:rgba(239,68,68,0.15);color:var(--red)}
+.badge-medium{background:rgba(245,158,11,0.15);color:var(--gold)}
+.badge-low{background:rgba(16,185,129,0.15);color:var(--green)}
+/* ─── RISK BAR ─── */
+.risk-bar{height:6px;border-radius:3px;background:var(--surface3);overflow:hidden;width:80px}
+.risk-fill{height:100%;border-radius:3px;transition:width 0.4s}
+/* ─── CARDS GRID ─── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+/* ─── CHARTS ─── */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.chart-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px}
+canvas{width:100% !important}
+/* ─── ACTIVITY FEED ─── */
+#activityFeed{position:fixed;right:0;top:60px;width:300px;height:calc(100vh - 60px);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:80;transform:translateX(100%);transition:transform 0.3s}
+#activityFeed.open{transform:translateX(0)}
+.feed-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-weight:600}
+.feed-body{flex:1;overflow-y:auto;padding:8px}
+.feed-item{padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:6px;font-size:12px;background:var(--surface2);border-left:3px solid var(--border2);animation:feedIn 0.3s ease}
+.feed-item.fraud{border-left-color:var(--red)}
+.feed-item.transfer{border-left-color:var(--accent)}
+.feed-item.loan{border-left-color:var(--purple)}
+.feed-item.deposit{border-left-color:var(--green)}
+.feed-item.alert{border-left-color:var(--orange)}
+.feed-time{color:var(--text3);font-size:10px;font-family:var(--mono);margin-top:4px}
+@keyframes feedIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+/* ─── NOTIFICATIONS ─── */
+#toastArea{position:fixed;bottom:24px;right:24px;z-index:10000;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;min-width:300px;max-width:400px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow-lg);animation:toastIn 0.3s ease;pointer-events:all;cursor:pointer}
+.toast.exit{animation:toastOut 0.3s ease forwards}
+.toast-icon{font-size:20px;min-width:24px}
+.toast-content p{font-size:13px;font-weight:600}
+.toast-content span{font-size:11px;color:var(--text3)}
+.toast-fraud{border-left:4px solid var(--red)}
+.toast-success{border-left:4px solid var(--green)}
+.toast-warning{border-left:4px solid var(--gold)}
+.toast-info{border-left:4px solid var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(20px)}}
+/* ─── MODAL ─── */
+#modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:5000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#modalOverlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);min-width:460px;max-width:700px;width:90%;max-height:85vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;scale:0.95}to{opacity:1;scale:1}}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{width:30px;height:30px;background:var(--surface2);border:none;border-radius:6px;cursor:pointer;color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--red);color:#fff}
+.modal-body{padding:24px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+/* ─── FORM ROWS ─── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.form-row.full{grid-template-columns:1fr}
+.field-group{margin-bottom:16px}
+.field-group label{display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:6px}
+.field-group input,.field-group select,.field-group textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-family:var(--font);font-size:13px}
+.field-group input:focus,.field-group select:focus{outline:none;border-color:var(--accent)}
+/* ─── CONTROL PANEL ─── */
+.control-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.control-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.control-title{font-size:13px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.slider-group{margin-bottom:16px}
+.slider-label{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px}
+.slider-label span{color:var(--text3)}
+.slider-label strong{color:var(--accent);font-family:var(--mono)}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:13px;color:var(--text2)}
+.toggle{position:relative;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--surface3);border-radius:12px;cursor:pointer;transition:0.3s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:var(--text3);border-radius:50%;transition:0.3s}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);background:#fff}
+/* ─── USER PROFILE ─── */
+.profile-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;display:flex;gap:20px;align-items:flex-start}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;min-width:72px}
+.profile-info h2{font-size:20px;font-weight:700}
+.profile-info p{color:var(--text3);font-size:13px;margin-top:2px}
+.profile-meta{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.profile-meta-item{font-size:12px}
+.profile-meta-item label{color:var(--text3);margin-right:4px}
+.profile-actions{margin-left:auto;display:flex;gap:8px}
+.profile-tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:-1px}
+.profile-tab{padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px}
+.profile-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* ─── INLINE EDITABLE ─── */
+.editable{cursor:text;border-bottom:1px dashed transparent;transition:border-color 0.2s}
+.editable:hover{border-bottom-color:var(--accent)}
+/* ─── OTP MODAL ─── */
+.otp-digits{display:flex;gap:8px;justify-content:center;margin:20px 0}
+.otp-digit{width:48px;height:56px;background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);text-align:center;font-size:24px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.otp-digit:focus{outline:none;border-color:var(--accent)}
+/* ─── LOAN CARD ─── */
+.loan-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.loan-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.loan-progress{height:8px;background:var(--surface3);border-radius:4px;overflow:hidden;margin-top:8px}
+.loan-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--green));transition:width 0.5s}
+/* ─── MINI CHART BARS ─── */
+.mini-chart{display:flex;align-items:flex-end;gap:3px;height:40px}
+.mini-bar{flex:1;background:var(--accent);border-radius:2px 2px 0 0;opacity:0.7;transition:opacity 0.2s}
+.mini-bar:hover{opacity:1}
+/* ─── CHAOS MODE ─── */
+@keyframes chaos{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+body.chaos{animation:chaos 3s linear infinite}
+/* ─── RESPONSIVE GRID ─── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+/* ─── MISC ─── */
+.divider{height:1px;background:var(--border);margin:16px 0}
+.empty-state{text-align:center;padding:40px;color:var(--text3)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.currency{font-family:var(--mono);font-weight:600}
+.positive{color:var(--green)}
+.negative{color:var(--red)}
+.mono{font-family:var(--mono)}
+.text-sm{font-size:12px}
+.text-xs{font-size:11px}
+.text-muted{color:var(--text3)}
+.fw-600{font-weight:600}
+.flex{display:flex}
+.flex-center{display:flex;align-items:center;gap:8px}
+.scroll-x{overflow-x:auto}
+/* Geo map */
+.geo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.geo-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px}
+.geo-name{font-size:12px;font-weight:600;margin-bottom:6px}
+.geo-bar{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.geo-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--cyan));transition:width 0.5s}
+.geo-stat{font-size:11px;color:var(--text3);font-family:var(--mono)}
+/* Clickable row */
+.clickable-row{cursor:pointer}
+.clickable-row:hover td{background:rgba(59,130,246,0.06) !important}
+/* Command palette */
+#cmdPalette{position:fixed;top:100px;left:50%;transform:translateX(-50%);width:600px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);z-index:9998;display:none;box-shadow:var(--shadow-lg)}
+#cmdPalette.open{display:block}
+#cmdInput{width:100%;background:transparent;border:none;padding:16px 20px;color:var(--text);font-family:var(--font);font-size:15px}
+#cmdInput:focus{outline:none}
+.cmd-results{border-top:1px solid var(--border);max-height:300px;overflow-y:auto}
+.cmd-item{padding:10px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;font-size:13px}
+.cmd-item:hover{background:var(--surface3)}
+.cmd-item-key{font-family:var(--mono);font-size:11px;background:var(--surface3);padding:2px 6px;border-radius:4px;margin-left:auto;color:var(--text3)}
+/* KYC status */
+.kyc-steps{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.kyc-step{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;flex:1;min-width:120px}
+.kyc-step-label{color:var(--text3);margin-bottom:4px;font-size:11px}
+.kyc-step-val{font-weight:600}
+/* Responsive */
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.control-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🏦</div>
+      <div class="login-logo-text">
+        <h1>BancoPilipinas</h1>
+        <p>Core Banking Simulation</p>
+      </div>
+    </div>
+    <div class="login-form">
+      <h2>Secure Access</h2>
+      <p>Sign in to the banking administration portal</p>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Enter username" value="admin">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password" value="admin">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="loginRole">
+          <option value="superadmin">Super Admin</option>
+          <option value="staff">Staff / Teller</option>
+          <option value="auditor">Auditor (Read-Only)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">🔐 Sign In Securely</button>
+      <div class="login-hint">Use <code>admin</code> / <code>admin</code> to login</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     OTP MODAL
+═══════════════════════════════════════════ -->
+<div id="otpModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:none;align-items:center;justify-content:center">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><span class="modal-title">🔒 Two-Factor Authentication</span></div>
+    <div class="modal-body" style="text-align:center">
+      <p style="color:var(--text3);font-size:13px;margin-bottom:8px">A 6-digit OTP has been sent to your registered device.</p>
+      <p style="font-family:var(--mono);font-size:24px;letter-spacing:6px;color:var(--gold);margin:12px 0" id="otpDisplay">------</p>
+      <div class="otp-digits" id="otpDigits"></div>
+      <p style="font-size:11px;color:var(--text3)">Generated OTP shown above for simulation</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeOtp()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="verifyOtp()">Verify →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo-icon">🏦</div>
+      <div class="sidebar-logo-text">
+        <h3>BancoPilipinas</h3>
+        <p>Core Banking</p>
+      </div>
+    </div>
+    <div class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggle">◀</div>
+    <div class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Overview</div>
+        <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-item-icon">📊</span><span class="nav-item-text">Dashboard</span></div>
+        <div class="nav-item" onclick="showPage('activity',this)"><span class="nav-item-icon">📡</span><span class="nav-item-text">Live Activity</span></div>
+        <div class="nav-item" onclick="showPage('analytics',this)"><span class="nav-item-icon">📈</span><span class="nav-item-text">Analytics</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Banking</div>
+        <div class="nav-item" onclick="showPage('users',this)"><span class="nav-item-icon">👥</span><span class="nav-item-text">Users</span></div>
+        <div class="nav-item" onclick="showPage('transactions',this)"><span class="nav-item-icon">💸</span><span class="nav-item-text">Transactions</span></div>
+        <div class="nav-item" onclick="showPage('loans',this)"><span class="nav-item-icon">🏛️</span><span class="nav-item-text">Loans</span></div>
+        <div class="nav-item" onclick="showPage('cards',this)"><span class="nav-item-icon">💳</span><span class="nav-item-text">Cards</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Operations</div>
+        <div class="nav-item" onclick="showPage('fraud',this)"><span class="nav-item-icon">🚨</span><span class="nav-item-text">Fraud Center</span><span class="nav-badge" id="fraudBadge">0</span></div>
+        <div class="nav-item" onclick="showPage('kyc',this)"><span class="nav-item-icon">🪪</span><span class="nav-item-text">KYC / Docs</span></div>
+        <div class="nav-item" onclick="showPage('geo',this)"><span class="nav-item-icon">🌏</span><span class="nav-item-text">Geographic</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Control</div>
+        <div class="nav-item" onclick="showPage('simcontrol',this)"><span class="nav-item-icon">🎛️</span><span class="nav-item-text">Sim Control</span></div>
+        <div class="nav-item" onclick="showPage('auditlog',this)"><span class="nav-item-icon">📋</span><span class="nav-item-text">Audit Log</span></div>
+        <div class="nav-item" onclick="showPage('staffsim',this)"><span class="nav-item-icon">🧑‍💼</span><span class="nav-item-text">Staff Sim</span></div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-info-text">
+          <p id="userName">Admin</p>
+          <span id="userRole">Super Admin</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div id="mainArea">
+    <!-- TOPBAR -->
+    <div id="topbar">
+      <div class="topbar-breadcrumb" id="breadcrumb">
+        <span>BancoPilipinas</span><span class="breadcrumb-sep">›</span><span class="active">Dashboard</span>
+      </div>
+      <div class="topbar-search">
+        <span class="topbar-search-icon">🔍</span>
+        <input type="text" placeholder="Search users, accounts, transactions…" id="globalSearch" onkeyup="handleSearch(this.value)" onclick="this.select()">
+        <div id="searchResults"></div>
+      </div>
+      <div class="topbar-actions">
+        <div class="tps-counter" id="tpsCounter">0 TPS</div>
+        <div class="sim-speed-badge" id="speedBadge" onclick="cycleSpeed()">1×</div>
+        <div class="topbar-btn" onclick="toggleFeed()" title="Activity Feed">📡</div>
+        <div class="topbar-btn" onclick="showPage('fraud',null)" title="Fraud Alerts">🚨<span class="topbar-badge" id="fraudCount">0</span></div>
+        <div class="topbar-btn" onclick="openCmdPalette()" title="Command Palette (Ctrl+K)">⚡</div>
+        <div class="topbar-btn" onclick="logout()" title="Logout" style="background:rgba(239,68,68,0.1)">🚪</div>
+      </div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div id="contentArea">
+
+      <!-- ═══ DASHBOARD PAGE ═══ -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value accent" id="statUsers">0</div>
+            <div class="stat-sub"><span class="stat-change-up">▲</span><span id="statUsersNew">+0 today</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-label">System Balance (PHP)</div>
+            <div class="stat-value green" id="statBalance">₱0</div>
+            <div class="stat-sub">Exchange Rate: <span id="exchangeRate">1 USD = ₱57.00</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💸</div>
+            <div class="stat-label">Today's Transactions</div>
+            <div class="stat-value gold" id="statTxns">0</div>
+            <div class="stat-sub">Volume: <span id="txnVolume">₱0</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🚨</div>
+            <div class="stat-label">Fraud Alerts</div>
+            <div class="stat-value red" id="statFraud">0</div>
+            <div class="stat-sub">Flagged this hour: <span id="fraudHour">0</span></div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🏛️</div>
+            <div class="stat-label">Active Loans</div>
+            <div class="stat-value accent" id="statLoans">0</div>
+            <div class="stat-sub">Total outstanding: <span id="loanOutstanding">₱0</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-label">Overdue Loans</div>
+            <div class="stat-value red" id="statOverdue">0</div>
+            <div class="stat-sub">Default rate: <span id="defaultRate">0%</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔒</div>
+            <div class="stat-label">Frozen Accounts</div>
+            <div class="stat-value" id="statFrozen">0</div>
+            <div class="stat-sub">Under review: <span id="statReview">0</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💱</div>
+            <div class="stat-label">USD Balance</div>
+            <div class="stat-value gold" id="statUSD">$0</div>
+            <div class="stat-sub">Multi-currency accounts</div>
+          </div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">Transaction Volume (Last 12 Hours)<span style="font-size:11px;font-weight:400;color:var(--text3)">Live</span></div>
+            <canvas id="chartTxnVolume" height="180"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Account Distribution</div>
+            <canvas id="chartAccountDist" height="180"></canvas>
+          </div>
+        </div>
+        <div class="grid-2" style="gap:16px;margin-bottom:24px">
+          <div>
+            <div class="section-header">
+              <div class="section-title">🏆 Top Balances</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>User</th><th>Account</th><th>Balance</th><th>Risk</th></tr></thead>
+                <tbody id="topBalancesTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div class="section-header">
+              <div class="section-title">🚨 Recent Fraud Flags</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>User</th><th>Reason</th><th>Amount</th><th>Action</th></tr></thead>
+                <tbody id="recentFraudTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ USERS PAGE ═══ -->
+      <div class="page" id="page-users">
+        <div class="section-header">
+          <div class="section-title">👥 User Management <span style="font-size:12px;font-weight:400;color:var(--text3)" id="userCountLabel"></span></div>
+          <div class="section-actions">
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 Export CSV</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddUser()">＋ Add User</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-filters">
+            <input class="filter-input" placeholder="🔍 Filter by name / account…" id="userFilter" oninput="renderUsersTable()">
+            <select class="filter-input" id="filterStatus" onchange="renderUsersTable()">
+              <option value="">All Status</option>
+              <option>Active</option><option>Frozen</option><option>Locked</option><option>Under Review</option>
+            </select>
+            <select class="filter-input" id="filterRisk" onchange="renderUsersTable()">
+              <option value="">All Risk</option>
+              <option>Low</option><option>Medium</option><option>High</option>
+            </select>
+            <select class="filter-input" id="filterRegion" onchange="renderUsersTable()">
+              <option value="">All Regions</option>
+            </select>
+            <span style="font-size:12px;color:var(--text3);margin-left:auto" id="userTableCount"></span>
+          </div>
+          <div style="max-height:520px;overflow-y:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th onclick="sortUsers('name')">Name ↕</th>
+                  <th onclick="sortUsers('account')">Account # ↕</th>
+                  <th>Region</th>
+                  <th onclick="sortUsers('balance')">Balance ↕</th>
+                  <th>Status</th>
+                  <th>Risk</th>
+                  <th>KYC</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TRANSACTIONS PAGE ═══ -->
+      <div class="page" id="page-transactions">
+        <div class="section-header">
+          <div class="section-title">💸 Transaction Ledger</div>
+          <div class="section-actions">
+            <button class="btn btn-primary btn-sm" onclick="openManualTxn()">＋ Manual Transaction</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-filters">
+            <input class="filter-input" placeholder="🔍 Filter transactions…" id="txnFilter" oninput="renderTxnTable()">
+            <select class="filter-input" id="txnTypeFilter" onchange="renderTxnTable()">
+              <option value="">All Types</option>
+              <option>Deposit</option><option>Withdraw</option><option>Transfer</option>
+              <option>Bills</option><option>Interbank</option><option>Conversion</option><option>Salary</option><option>Loan Payment</option>
+            </select>
+            <select class="filter-input" id="txnStatusFilter" onchange="renderTxnTable()">
+              <option value="">All Status</option>
+              <option>Completed</option><option>Pending</option><option>Flagged</option><option>Failed</option>
+            </select>
+          </div>
+          <div style="max-height:540px;overflow-y:auto" id="txnTableWrap">
+            <table>
+              <thead><tr><th>TXN ID</th><th>Time</th><th>From</th><th>To</th><th>Type</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="txnTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ LOANS PAGE ═══ -->
+      <div class="page" id="page-loans">
+        <div class="section-header">
+          <div class="section-title">🏛️ Loan Management</div>
+          <div class="section-actions">
+            <button class="btn btn-ghost btn-sm" onclick="approvePendingLoans()">✅ Approve All Pending</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddLoan()">＋ Issue Loan</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-filters">
+            <input class="filter-input" placeholder="🔍 Filter loans…" id="loanFilter" oninput="renderLoansTable()">
+            <select class="filter-input" id="loanStatusFilter" onchange="renderLoansTable()">
+              <option value="">All Status</option>
+              <option>Active</option><option>Pending</option><option>Overdue</option><option>Defaulted</option><option>Paid</option>
+            </select>
+            <select class="filter-input" id="loanTypeFilter" onchange="renderLoansTable()">
+              <option value="">All Types</option>
+              <option>Personal</option><option>Car</option><option>Home</option><option>Business</option>
+            </select>
+          </div>
+          <div style="max-height:540px;overflow-y:auto">
+            <table>
+              <thead><tr><th>Loan ID</th><th>Borrower</th><th>Type</th><th>Amount</th><th>Interest</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="loansTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ FRAUD PAGE ═══ -->
+      <div class="page" id="page-fraud">
+        <div class="section-header">
+          <div class="section-title">🚨 Fraud Detection Center</div>
+          <div class="section-actions">
+            <button class="btn btn-ghost btn-sm" onclick="clearFraud()">Clear Resolved</button>
+            <button class="btn btn-danger btn-sm" onclick="freezeAllFlagged()">❄️ Freeze All Flagged</button>
+          </div>
+        </div>
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card"><div class="stat-label">Total Flags</div><div class="stat-value red" id="fStatTotal">0</div></div>
+          <div class="stat-card"><div class="stat-label">High Priority</div><div class="stat-value red" id="fStatHigh">0</div></div>
+          <div class="stat-card"><div class="stat-label">Accounts Frozen</div><div class="stat-value accent" id="fStatFrozen">0</div></div>
+          <div class="stat-card"><div class="stat-label">Resolved Today</div><div class="stat-value green" id="fStatResolved">0</div></div>
+        </div>
+        <div class="table-wrap" style="margin-top:16px">
+          <div style="max-height:480px;overflow-y:auto">
+            <table>
+              <thead><tr><th>User</th><th>Type</th><th>Reason</th><th>Amount</th><th>Priority</th><th>Time</th><th>Actions</th></tr></thead>
+              <tbody id="fraudTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ACTIVITY PAGE ═══ -->
+      <div class="page" id="page-activity">
+        <div class="section-header">
+          <div class="section-title">📡 Live Activity Feed</div>
+          <div class="section-actions">
+            <button class="btn btn-ghost btn-sm" onclick="SIM.activityFeed=[]">Clear</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+          <div class="table-wrap">
+            <div style="max-height:600px;overflow-y:auto;padding:12px" id="activityPage"></div>
+          </div>
+          <div>
+            <div class="chart-card" style="margin-bottom:16px">
+              <div class="chart-title">TPS (Last 60s)</div>
+              <canvas id="chartTPS" height="140"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Risk Distribution</div>
+              <canvas id="chartRisk" height="140"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ANALYTICS PAGE ═══ -->
+      <div class="page" id="page-analytics">
+        <div class="section-header">
+          <div class="section-title">📈 Predictive Analytics</div>
+        </div>
+        <div class="charts-grid" style="margin-bottom:16px">
+          <div class="chart-card">
+            <div class="chart-title">Balance Growth Over Time</div>
+            <canvas id="chartGrowth" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Loan Status Breakdown</div>
+            <canvas id="chartLoanStatus" height="200"></canvas>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="chart-card">
+            <div class="chart-title">Transaction Types (Today)</div>
+            <canvas id="chartTxnTypes" height="160"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Fraud Rate Over Time</div>
+            <canvas id="chartFraudRate" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ KYC PAGE ═══ -->
+      <div class="page" id="page-kyc">
+        <div class="section-header">
+          <div class="section-title">🪪 KYC / Document Verification</div>
+          <div class="section-actions">
+            <button class="btn btn-success btn-sm" onclick="approveAllKYC()">✅ Approve All Pending</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div style="max-height:560px;overflow-y:auto">
+            <table>
+              <thead><tr><th>User</th><th>Account</th><th>ID Type</th><th>KYC Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+              <tbody id="kycTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ GEO PAGE ═══ -->
+      <div class="page" id="page-geo">
+        <div class="section-header">
+          <div class="section-title">🌏 Geographic Distribution — Philippines</div>
+        </div>
+        <div class="grid-2" style="gap:16px">
+          <div class="chart-card">
+            <div class="chart-title">Transaction Activity by Region</div>
+            <canvas id="chartGeo" height="260"></canvas>
+          </div>
+          <div>
+            <div class="chart-card" style="margin-bottom:16px">
+              <div class="chart-title">Loan Distribution by Province</div>
+              <canvas id="chartGeoLoans" height="120"></canvas>
+            </div>
+            <div class="geo-grid" id="geoGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CARDS PAGE ═══ -->
+      <div class="page" id="page-cards">
+        <div class="section-header">
+          <div class="section-title">💳 Card System</div>
+          <div class="section-actions">
+            <button class="btn btn-primary btn-sm" onclick="issueCard()">＋ Issue Card</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div style="max-height:540px;overflow-y:auto">
+            <table>
+              <thead><tr><th>Card Number</th><th>Holder</th><th>Type</th><th>Expiry</th><th>Limit</th><th>Used</th><th>State</th><th>Actions</th></tr></thead>
+              <tbody id="cardsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SIM CONTROL ═══ -->
+      <div class="page" id="page-simcontrol">
+        <div class="section-header">
+          <div class="section-title">🎛️ Simulation Control Panel</div>
+        </div>
+        <div class="control-grid">
+          <div class="control-card">
+            <div class="control-title">⚡ Speed & Rate Control</div>
+            <div class="slider-group">
+              <div class="slider-label"><span>Simulation Speed</span><strong id="lblSpeed">1×</strong></div>
+              <input type="range" min="1" max="100" value="1" id="sliderSpeed" oninput="updateSpeed(this.value)">
+            </div>
+            <div class="slider-group">
+              <div class="slider-label"><span>Fraud Rate</span><strong id="lblFraud">5%</strong></div>
+              <input type="range" min="0" max="50" value="5" id="sliderFraud" oninput="updateFraudRate(this.value)">
+            </div>
+            <div class="slider-group">
+              <div class="slider-label"><span>New Users / min</span><strong id="lblUsers">3</strong></div>
+              <input type="range" min="0" max="20" value="3" id="sliderUsers" oninput="updateUserRate(this.value)">
+            </div>
+            <div class="slider-group">
+              <div class="slider-label"><span>Loan Strictness</span><strong id="lblLoan">Medium</strong></div>
+              <input type="range" min="0" max="2" value="1" id="sliderLoan" oninput="updateLoanStrict(this.value)">
+            </div>
+            <div class="slider-group">
+              <div class="slider-label"><span>Interest Rate (%)</span><strong id="lblInterest">6%</strong></div>
+              <input type="range" min="1" max="30" value="6" id="sliderInterest" oninput="updateInterest(this.value)">
+            </div>
+          </div>
+          <div class="control-card">
+            <div class="control-title">🔧 System Toggles</div>
+            <div class="toggle-row">
+              <span class="toggle-label">Auto Generate Users</span>
+              <label class="toggle"><input type="checkbox" checked id="toggleAutoUsers" onchange="SIM.autoUsers=this.checked"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Auto Transactions</span>
+              <label class="toggle"><input type="checkbox" checked id="toggleAutoTxn" onchange="SIM.autoTxn=this.checked"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Fraud Detection</span>
+              <label class="toggle"><input type="checkbox" checked id="toggleFraudDetect" onchange="SIM.fraudDetection=this.checked"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Auto Loan Payments</span>
+              <label class="toggle"><input type="checkbox" checked id="toggleAutoLoan"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Interest Accrual</span>
+              <label class="toggle"><input type="checkbox" checked id="toggleInterest"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Chaos Mode 💥</span>
+              <label class="toggle"><input type="checkbox" id="toggleChaos" onchange="toggleChaosMode(this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">Economic Crash 📉</span>
+              <label class="toggle"><input type="checkbox" id="toggleCrash" onchange="triggerCrash(this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+          <div class="control-card">
+            <div class="control-title">🌪️ Event Triggers</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-danger btn-sm" onclick="triggerEvent('typhoon')">🌀 Typhoon (Regional Disruption)</button>
+              <button class="btn btn-danger btn-sm" onclick="triggerEvent('fraud_spike')">💥 Fraud Spike</button>
+              <button class="btn btn-danger btn-sm" onclick="triggerEvent('bank_run')">🏃 Bank Run</button>
+              <button class="btn btn-warning btn-sm" style="background:var(--gold);color:#000" onclick="triggerEvent('salary')">💰 Mass Salary Deposit</button>
+              <button class="btn btn-success btn-sm" onclick="triggerEvent('rate_cut')">📉 Interest Rate Cut</button>
+              <button class="btn btn-ghost btn-sm" onclick="triggerEvent('maintenance')">🔧 System Maintenance</button>
+              <button class="btn btn-ghost btn-sm" onclick="SIM.users=[]; SIM.transactions=[]; SIM.loans=[]; initSim()">♻️ Reset & Reseed</button>
+              <button class="btn btn-ghost btn-sm" onclick="generateBulkUsers(1000)">👥 Generate 1,000 Users</button>
+            </div>
+          </div>
+        </div>
+        <div class="control-card" style="margin-top:16px">
+          <div class="control-title">📊 System Status</div>
+          <div class="grid-3" style="gap:16px">
+            <div>
+              <div class="stat-label">Server Load</div>
+              <div class="risk-bar" style="width:100%;margin-top:6px"><div class="risk-fill" id="serverLoad" style="width:30%;background:var(--green)"></div></div>
+              <div class="text-sm text-muted" id="serverLoadPct" style="margin-top:4px">30%</div>
+            </div>
+            <div>
+              <div class="stat-label">Memory Usage</div>
+              <div class="risk-bar" style="width:100%;margin-top:6px"><div class="risk-fill" id="memLoad" style="width:45%;background:var(--gold)"></div></div>
+              <div class="text-sm text-muted" id="memLoadPct" style="margin-top:4px">45%</div>
+            </div>
+            <div>
+              <div class="stat-label">Exchange Rate (USD/PHP)</div>
+              <div class="stat-value gold" style="font-size:20px" id="liveExchangeRate">57.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ AUDIT LOG ═══ -->
+      <div class="page" id="page-auditlog">
+        <div class="section-header">
+          <div class="section-title">📋 Audit Log</div>
+          <div class="section-actions">
+            <button class="btn btn-ghost btn-sm" onclick="SIM.auditLog=[]">Clear</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div style="max-height:600px;overflow-y:auto">
+            <table>
+              <thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+              <tbody id="auditTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ STAFF SIM ═══ -->
+      <div class="page" id="page-staffsim">
+        <div class="section-header">
+          <div class="section-title">🧑‍💼 Staff Activity Simulation</div>
+        </div>
+        <div class="grid-2" style="gap:16px">
+          <div class="chart-card">
+            <div class="chart-title">Staff Members</div>
+            <div id="staffList"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Recent Staff Actions</div>
+            <div id="staffActions" style="max-height:400px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /contentArea -->
+  </div><!-- /mainArea -->
+</div><!-- /app -->
+
+<!-- ACTIVITY FEED PANEL -->
+<div id="activityFeed">
+  <div class="feed-header">
+    <span>📡 Live Feed</span>
+    <button class="btn btn-ghost btn-sm" onclick="toggleFeed()">✕</button>
+  </div>
+  <div class="feed-body" id="feedBody"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Modal</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- TOAST AREA -->
+<div id="toastArea"></div>
+
+<!-- COMMAND PALETTE -->
+<div id="cmdPalette">
+  <input type="text" id="cmdInput" placeholder="Type a command… (e.g. freeze user, issue loan)" oninput="filterCmds(this.value)" onkeydown="cmdKeydown(event)">
+  <div class="cmd-results" id="cmdResults"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT ENGINE
+═══════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+'use strict';
+// ══════════════════════════════
+// DATA POOLS
+// ══════════════════════════════
+const FIRST_NAMES=['Jose','Maria','Juan','Ana','Carlo','Rosa','Mark','Liza','Angelo','Grace','Ramon','Sharon','Rodel','Kristine','Eduardo','Maricel','Francis','Rhea','Rodrigo','Jasmine','Bernard','Cristina','Patrick','Jennifer','Roland','Michelle','Allan','Maribel','Kenneth','Melissa','Jerome','Vanessa','Aaron','Christine','Ryan','Aileen','Jayson','Hazel','Michael','Sheila','Danilo','Rowena','Ferdinand','Lorraine','Rafael','Cynthia','Gerald','Lovely','Dennis','Irene','Anthony','Leonora','Victor','Gloria','Renato','Teresita','Arnel','Marilyn','Ricardo','Leticia','Marvin','Cecilia','Edgardo','Dolores','Roberto','Estela','Alfredo','Zenaida','Elmer','Mila','Ernesto','Remedios','Ruben','Corazon','Joel','Lourdes','Henry','Florentina','Emmanuel','Adelaida','Benjamin','Resurreccion','Cesar','Perpetua'];
+const LAST_NAMES=['Santos','Reyes','Cruz','Garcia','Ramos','Flores','Bautista','Castillo','Dela Cruz','Aquino','Lopez','Villanueva','Torres','Gonzales','Santiago','Mendoza','Rivera','Hernandez','Perez','Jimenez','Ocampo','Manalo','Pascual','Soriano','Delos Santos','Dizon','Guerrero','Aguilar','Macapagal','Buenaventura','Cueto','Esguerra','Fajardo','Hidalgo','Ilustre','Javier','Lacson','Navarro','Orozco','Panlilio','Quizon','Salamanca','Tagalog','Uy','Valencia','Watawit','Yap','Zabala','Almario','Briones'];
+const REGIONS=['Metro Manila','Cebu','Davao','Iloilo','Pampanga','Batangas','Laguna','Cavite','Bataan','Palawan','Ilocos Norte','La Union','Pangasinan','Nueva Ecija','Quezon','Albay','Camarines Sur','Eastern Samar','Leyte','Zamboanga','Cagayan de Oro','General Santos','Bukidnon','Misamis Oriental','Agusan del Norte'];
+const TXN_TYPES=['Deposit','Withdraw','Transfer','Bills','Interbank','Conversion','Salary','Loan Payment'];
+const LOAN_TYPES=['Personal','Car','Home','Business'];
+const BILL_NAMES=['Meralco','PLDT','Maynilad','Globe','Smart','Converge','Manila Water'];
+const BANKS=['BancoPilipinas','BDO','BPI','Metrobank','UnionBank','PNB','LandBank','DBP','RCBC','EastWest'];
+const ID_TYPES=['PhilSys ID','Passport','SSS ID','UMID','Driver License','Voter ID','PRC ID'];
+const PERSONALITY_TYPES=['Saver','Spender','Investor','Borrower','Conservative'];
+const FRAUD_REASONS=['Unusual large transfer','Rapid successive transactions','Foreign IP detected','Multiple failed logins','Suspicious withdrawal pattern','Round-number transactions','Account takeover attempt','Skimming detected','Phishing attempt','Duplicate identity'];
+const STAFF_NAMES=['Teller Arlene','Teller Bong','Officer Celine','Manager Dindo','Auditor Evelyn','Teller Fernando'];
+
+// ══════════════════════════════
+// SIMULATION STATE
+// ══════════════════════════════
+const SIM = {
+  users: [], transactions: [], loans: [], fraudAlerts: [], cards: [],
+  auditLog: [], activityFeed: [], staffLog: [],
+  totalBalance: 0, usdBalance: 0,
+  tpsHistory: new Array(60).fill(0),
+  txnVolumeHistory: new Array(12).fill(0),
+  fraudRateHistory: new Array(20).fill(0),
+  balanceHistory: new Array(20).fill(0),
+  exchangeRate: 57.0,
+  fraudRate: 5, speed: 1, userRate: 3,
+  loanStrictness: 1, interestRate: 6,
+  autoUsers: true, autoTxn: true, fraudDetection: true,
+  chaosMode: false, economicCrash: false,
+  tick: 0, tpsThisSecond: 0,
+  resolvedFraud: 0,
+  currentUser: null, currentRole: 'superadmin',
+  sortField: 'name', sortDir: 1,
+  usersSinceLogin: 0,
+  maintenanceMode: false,
+  _uid: 1000000, _tid: 1, _lid: 1, _cid: 1
+};
+
+// Canvases
+let charts = {};
+
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function rndFloat(min,max,d=2){return parseFloat((Math.random()*(max-min)+min).toFixed(d))}
+function rndItem(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function fmt(n){return '₱'+Number(n).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtUSD(n){return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function now(){return new Date().toLocaleTimeString('en-PH')}
+function nowFull(){return new Date().toLocaleString('en-PH')}
+function acctNum(){return 'PH-'+rand(1000,9999)+'-'+rand(10000,99999)+'-'+rand(10,99)}
+function cardNum(){return rndItem(['4','5'])+''+Array(15).fill(0).map(()=>rand(0,9)).join('')}
+function riskColor(score){return score<35?'var(--green)':score<65?'var(--gold)':'var(--red)'}
+function riskLabel(score){return score<35?'Low':score<65?'Medium':'High'}
+function riskBadgeClass(score){return score<35?'badge-low':score<65?'badge-medium':'badge-high'}
+function statusBadge(s){const m={Active:'badge-active',Frozen:'badge-frozen',Locked:'badge-locked','Under Review':'badge-review'};return`<span class="badge ${m[s]||'badge-review'}">${s}</span>`}
+function kycBadge(s){const m={Verified:'badge-kyc-verified',Pending:'badge-kyc-pending',Rejected:'badge-kyc-rejected'};return`<span class="badge ${m[s]||'badge-kyc-pending'}">${s}</span>`}
+function loanBadge(s){const m={Active:'badge-active',Pending:'badge-pending',Overdue:'badge-overdue',Defaulted:'badge-default',Paid:'badge-paid'};return`<span class="badge ${m[s]||'badge-pending'}">${s}</span>`}
+
+// ══════════════════════════════
+// USER GENERATION
+// ══════════════════════════════
+function generateUser(override={}){
+  const fn=rndItem(FIRST_NAMES), ln=rndItem(LAST_NAMES);
+  const age=rand(18,75);
+  const personality=rndItem(PERSONALITY_TYPES);
+  const balance=personality==='Saver'?rndFloat(5000,500000):personality==='Spender'?rndFloat(500,50000):rndFloat(1000,200000);
+  const risk=personality==='Borrower'?rand(50,90):personality==='Conservative'?rand(5,30):rand(10,80);
+  const u={
+    id: SIM._uid++,
+    name:`${fn} ${ln}`,
+    firstName:fn, lastName:ln,
+    age, gender: Math.random()>0.5?'Male':'Female',
+    account: acctNum(),
+    region: rndItem(REGIONS),
+    balance: balance,
+    usdBalance: Math.random()>0.7?rndFloat(100,5000):0,
+    accountType: rndItem(['Savings','Checking','Credit']),
+    status: Math.random()>0.95?rndItem(['Frozen','Locked','Under Review']):'Active',
+    risk, personality,
+    kyc: Math.random()>0.15?'Verified':Math.random()>0.5?'Pending':'Rejected',
+    idType: rndItem(ID_TYPES),
+    email:`${fn.toLowerCase()}.${ln.toLowerCase().replace(' ','')}${rand(1,99)}@email.com`,
+    phone:`09${rand(100000000,999999999)}`,
+    joined: nowFull(),
+    transactions: [], loans: [],
+    flagged: false, pinned: false,
+    maritalStatus: rndItem(['Single','Married','Widowed']),
+    employer: Math.random()>0.3?rndItem(['BPO Corp','Ayala Corp','SM Holdings','JG Summit','PLDT','Government','OFW','Self-Employed']):'Unemployed',
+    creditScore: rand(300,850),
+    savingsInterest: 0,
+    loanInterestAccrued: 0,
+    lastActivity: now(),
+    subscriptions: Math.random()>0.5?rand(1,5):0,
+    ...override
+  };
+  SIM.totalBalance += u.balance;
+  SIM.usdBalance += u.usdBalance;
+  return u;
+}
+
+function generateBulkUsers(n){
+  for(let i=0;i<n;i++) SIM.users.push(generateUser());
+  toast('success','👥 Users Generated',`${n} new users added to system`);
+  renderAll();
+}
+
+// ══════════════════════════════
+// TRANSACTION GENERATION
+// ══════════════════════════════
+function generateTransaction(fromUser, toUser, type, amount, status='Completed'){
+  const t={
+    id:'TXN-'+String(SIM._tid++).padStart(8,'0'),
+    from: fromUser?fromUser.name:'System',
+    fromAccount: fromUser?fromUser.account:'SYS-0000',
+    to: toUser?toUser.name:(type==='Bills'?rndItem(BILL_NAMES):type==='Interbank'?rndItem(BANKS):'System'),
+    toAccount: toUser?toUser.account:'EXT-'+rand(10000,99999),
+    type, amount,
+    status,
+    time: nowFull(),
+    note: type==='Bills'?`${rndItem(BILL_NAMES)} bill payment`:type==='Salary'?'Monthly salary deposit':'',
+    currency: Math.random()>0.95?'USD':'PHP',
+    fee: type==='Interbank'?rndFloat(25,150):type==='Transfer'?rndFloat(0,50):0,
+    flagged: false, edited: false,
+    originalAmount: amount,
+    bank: rndItem(BANKS)
+  };
+  // Apply transaction
+  if(status==='Completed' && fromUser){
+    if(type==='Deposit'||type==='Salary'){fromUser.balance+=amount}
+    else if(type==='Withdraw'||type==='Bills'){fromUser.balance=Math.max(0,fromUser.balance-amount)}
+    else if(type==='Transfer'&&toUser){fromUser.balance=Math.max(0,fromUser.balance-amount);toUser.balance+=amount*0.99}
+    else if(type==='Interbank'){fromUser.balance=Math.max(0,fromUser.balance-amount)}
+    fromUser.lastActivity=now();
+    if(fromUser.transactions) fromUser.transactions.unshift(t.id);
+  }
+  SIM.tpsThisSecond++;
+  SIM.transactions.unshift(t);
+  if(SIM.transactions.length>2000) SIM.transactions.pop();
+  // Fraud check
+  if(SIM.fraudDetection && fromUser) checkFraud(fromUser, t);
+  return t;
+}
+
+// ══════════════════════════════
+// FRAUD DETECTION
+// ══════════════════════════════
+function checkFraud(user, txn){
+  const prob = SIM.fraudRate/100;
+  // High amount
+  if(txn.amount>200000 && Math.random()<0.6) flagFraud(user,txn,'Large transfer threshold exceeded');
+  // Random fraud rate
+  if(Math.random()<prob) flagFraud(user,txn,rndItem(FRAUD_REASONS));
+  // Rapid transactions
+  const recentTxns=SIM.transactions.filter(t=>t.from===user.name).slice(0,5);
+  if(recentTxns.length>=5 && Math.random()<0.3) flagFraud(user,txn,'Rapid successive transactions');
+}
+
+function flagFraud(user, txn, reason){
+  const priority=txn.amount>100000?'High':txn.amount>30000?'Medium':'Low';
+  const alert={
+    id:'FRD-'+rand(10000,99999), user: user.name, account: user.account,
+    userId: user.id, reason, amount: txn.amount,
+    priority, time: nowFull(), status:'Open',
+    txnId: txn.id, resolved:false
+  };
+  user.flagged=true;
+  if(SIM.fraudDetection){
+    if(priority==='High'&&Math.random()<0.5) user.status='Frozen';
+  }
+  txn.flagged=true; txn.status='Flagged';
+  SIM.fraudAlerts.unshift(alert);
+  if(SIM.fraudAlerts.length>500) SIM.fraudAlerts.pop();
+  addActivity(`🚨 Fraud flagged: ${user.name} — ${reason}`, 'fraud');
+  toast('fraud','🚨 Fraud Detected',`${user.name}: ${reason}`);
+  updateFraudBadge();
+}
+
+// ══════════════════════════════
+// LOAN GENERATION
+// ══════════════════════════════
+function generateLoan(user, override={}){
+  const type=rndItem(LOAN_TYPES);
+  const amount=type==='Home'?rndFloat(500000,5000000):type==='Car'?rndFloat(300000,1500000):type==='Business'?rndFloat(100000,2000000):rndFloat(10000,300000);
+  const interest=SIM.interestRate+rndFloat(-2,5);
+  const months=type==='Home'?rand(60,240):type==='Car'?rand(24,60):rand(6,36);
+  const monthly=amount*(interest/100/12)/(1-Math.pow(1+(interest/100/12),-months));
+  const l={
+    id:'LN-'+String(SIM._lid++).padStart(6,'0'),
+    userId: user.id, borrower: user.name,
+    type, amount, interest: parseFloat(interest.toFixed(2)),
+    months, monthlyPayment: parseFloat(monthly.toFixed(2)),
+    balance: amount,
+    status: user.creditScore>600?'Active':'Pending',
+    issued: nowFull(), missedPayments: 0,
+    paidMonths: 0, penalties: 0,
+    ...override
+  };
+  user.loans.push(l.id);
+  SIM.loans.unshift(l);
+  if(SIM.loans.length>1000) SIM.loans.pop();
+  return l;
+}
+
+// ══════════════════════════════
+// CARD GENERATION
+// ══════════════════════════════
+function generateCard(user){
+  const tier=user.balance>500000?'Platinum':user.balance>100000?'Gold':'Classic';
+  const c={
+    id:'CRD-'+String(SIM._cid++).padStart(5,'0'),
+    userId: user.id, holder: user.name,
+    number: cardNum(),
+    expiry: `${String(rand(1,12)).padStart(2,'0')}/${rand(27,32)}`,
+    cvv: String(rand(100,999)),
+    type: Math.random()>0.4?'Credit':'Debit',
+    tier, limit: tier==='Platinum'?500000:tier==='Gold'?100000:30000,
+    used: rndFloat(0,0.7),
+    state: 'Active',
+    issued: nowFull()
+  };
+  SIM.cards.push(c);
+  return c;
+}
+
+// ══════════════════════════════
+// SIMULATION TICK
+// ══════════════════════════════
+let simInterval=null;
+function startSim(){
+  if(simInterval) clearInterval(simInterval);
+  simInterval=setInterval(tick,1000/Math.max(1,Math.min(SIM.speed,10)));
+}
+
+function tick(){
+  if(SIM.maintenanceMode) return;
+  SIM.tick++;
+  // New users
+  if(SIM.autoUsers && SIM.tick % Math.max(1,Math.floor(20/SIM.speed/SIM.userRate*3)) === 0){
+    const u=generateUser();
+    SIM.users.push(u);
+    SIM.usersSinceLogin++;
+    addActivity(`👤 New user: ${u.name} — ${u.region}`, 'transfer');
+  }
+  // Auto transactions
+  if(SIM.autoTxn && SIM.users.length>0){
+    const numTxns=Math.max(1,Math.floor(SIM.speed*0.5));
+    for(let i=0;i<numTxns;i++){
+      const u=rndItem(SIM.users);
+      if(!u||u.status==='Frozen'||u.status==='Locked') continue;
+      const type=rndItem(TXN_TYPES);
+      let amount;
+      if(type==='Salary') amount=rndFloat(15000,80000);
+      else if(type==='Deposit') amount=rndFloat(500,50000);
+      else if(type==='Withdraw') amount=rndFloat(500,20000);
+      else if(type==='Bills') amount=rndFloat(500,5000);
+      else if(type==='Transfer'||type==='Interbank') amount=rndFloat(500,100000);
+      else if(type==='Conversion') amount=rndFloat(100,5000);
+      else amount=rndFloat(500,30000);
+      // Personality modifier
+      if(u.personality==='Saver') amount*=0.5;
+      if(u.personality==='Spender') amount*=2;
+      const to=type==='Transfer'&&SIM.users.length>1?rndItem(SIM.users.filter(x=>x.id!==u.id)):null;
+      generateTransaction(u,to,type,parseFloat(amount.toFixed(2)));
+      SIM.txnVolumeHistory[SIM.txnVolumeHistory.length-1]+=amount;
+    }
+  }
+  // Auto loan payments
+  if(SIM.tick%60===0){
+    SIM.loans.filter(l=>l.status==='Active').forEach(l=>{
+      const user=SIM.users.find(u=>u.id===l.userId);
+      if(!user) return;
+      if(user.balance>=l.monthlyPayment){
+        user.balance-=l.monthlyPayment;
+        l.balance-=(l.monthlyPayment - l.balance*(l.interest/100/12));
+        l.paidMonths++;
+        if(l.balance<=0){l.status='Paid';l.balance=0}
+      } else {
+        l.missedPayments++;
+        l.penalties+=500;
+        if(l.missedPayments>=3) l.status='Overdue';
+        if(l.missedPayments>=6) l.status='Defaulted';
+      }
+    });
+  }
+  // Interest accrual
+  if(SIM.tick%120===0){
+    SIM.users.forEach(u=>{
+      if(u.accountType==='Savings') u.balance+=u.balance*(0.02/365);
+    });
+    SIM.exchangeRate += rndFloat(-0.3,0.3,2);
+    SIM.exchangeRate = Math.max(50,Math.min(65,SIM.exchangeRate));
+  }
+  // TPS tracking
+  if(SIM.tick%10===0){
+    SIM.tpsHistory.shift();
+    SIM.tpsHistory.push(SIM.tpsThisSecond);
+    SIM.tpsThisSecond=0;
+  }
+  // History
+  if(SIM.tick%60===0){
+    SIM.txnVolumeHistory.shift();
+    SIM.txnVolumeHistory.push(0);
+    SIM.fraudRateHistory.shift();
+    SIM.fraudRateHistory.push(SIM.fraudAlerts.filter(f=>!f.resolved).length);
+    SIM.balanceHistory.shift();
+    SIM.balanceHistory.push(SIM.users.reduce((a,u)=>a+u.balance,0)/1000000);
+  }
+  // Chaos mode random events
+  if(SIM.chaosMode && Math.random()<0.02){
+    const u=rndItem(SIM.users);
+    if(u){
+      flagFraud(u,{amount:rndFloat(100000,9999999)},'Chaos mode anomaly');
+    }
+  }
+  updateUI();
+}
+
+// ══════════════════════════════
+// UI UPDATES
+// ══════════════════════════════
+function updateUI(){
+  const total=SIM.users.reduce((a,u)=>a+u.balance,0);
+  const totalUSD=SIM.users.reduce((a,u)=>a+u.usdBalance,0);
+  const active=SIM.loans.filter(l=>l.status==='Active');
+  const overdue=SIM.loans.filter(l=>l.status==='Overdue'||l.status==='Defaulted');
+  const frozen=SIM.users.filter(u=>u.status==='Frozen').length;
+  const review=SIM.users.filter(u=>u.status==='Under Review').length;
+  const openFraud=SIM.fraudAlerts.filter(f=>!f.resolved).length;
+  const todayTxns=SIM.transactions.length;
+  const todayVolume=SIM.transactions.reduce((a,t)=>a+t.amount,0);
+
+  setText('statUsers',SIM.users.length.toLocaleString());
+  setText('statUsersNew',`+${SIM.usersSinceLogin} this session`);
+  setText('statBalance',fmt(total));
+  setText('exchangeRate',`1 USD = ₱${SIM.exchangeRate.toFixed(2)}`);
+  setText('statTxns',todayTxns.toLocaleString());
+  setText('txnVolume',fmt(todayVolume));
+  setText('statFraud',openFraud);
+  setText('fraudHour',SIM.fraudAlerts.slice(0,20).length);
+  setText('statLoans',active.length);
+  setText('loanOutstanding',fmt(active.reduce((a,l)=>a+l.balance,0)));
+  setText('statOverdue',overdue.length);
+  setText('defaultRate',active.length?((overdue.length/(active.length+overdue.length)*100).toFixed(1)+'%'):'0%');
+  setText('statFrozen',frozen);
+  setText('statReview',review);
+  setText('statUSD',fmtUSD(totalUSD));
+  setText('tpsCounter',SIM.tpsHistory[SIM.tpsHistory.length-1]+' TPS');
+  setText('userCountLabel',`(${SIM.users.length.toLocaleString()} total)`);
+  setText('liveExchangeRate',SIM.exchangeRate.toFixed(2));
+  setText('fraudCount',openFraud);
+  setText('fraudBadge',openFraud);
+  updateFraudBadge();
+
+  // Server load sim
+  const load=Math.min(95,20+SIM.tpsHistory[SIM.tpsHistory.length-1]*2+(SIM.chaosMode?30:0));
+  const mem=Math.min(90,35+SIM.users.length/500);
+  setStyle('serverLoad','width',load+'%');
+  setStyle('serverLoad','background',load>70?'var(--red)':load>50?'var(--gold)':'var(--green)');
+  setStyle('memLoad','width',mem+'%');
+  setText('serverLoadPct',load.toFixed(0)+'%');
+  setText('memLoadPct',mem.toFixed(0)+'%');
+
+  // Fraud stats
+  setText('fStatTotal',SIM.fraudAlerts.length);
+  setText('fStatHigh',SIM.fraudAlerts.filter(f=>f.priority==='High').length);
+  setText('fStatFrozen',SIM.users.filter(u=>u.status==='Frozen').length);
+  setText('fStatResolved',SIM.resolvedFraud);
+
+  updateCharts();
+  const ap=document.getElementById('activityPage');
+  if(ap) ap.innerHTML=SIM.activityFeed.slice(0,80).map(f=>`<div class="feed-item ${f.type}" style="margin-bottom:6px"><div>${f.text}</div><div class="feed-time">${f.time}</div></div>`).join('');
+
+  // Dashboard top tables
+  renderTopBalances();
+  renderRecentFraud();
+  // Dynamic pages
+  const activePage=document.querySelector('.page.active');
+  if(activePage){
+    const id=activePage.id;
+    if(id==='page-users') renderUsersTable();
+    if(id==='page-transactions') renderTxnTable();
+    if(id==='page-loans') renderLoansTable();
+    if(id==='page-fraud') renderFraudTable();
+    if(id==='page-kyc') renderKycTable();
+    if(id==='page-cards') renderCardsTable();
+    if(id==='page-auditlog') renderAuditTable();
+    if(id==='page-geo') renderGeo();
+    if(id==='page-staffsim') renderStaff();
+  }
+}
+
+function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val}
+function setStyle(id,prop,val){const el=document.getElementById(id);if(el)el.style[prop]=val}
+function updateFraudBadge(){const n=SIM.fraudAlerts.filter(f=>!f.resolved).length;setText('fraudBadge',n);setText('fraudCount',n)}
+
+// ══════════════════════════════
+// CHARTS
+// ══════════════════════════════
+const CHART_DEFAULTS={
+  color:'#94a3b8',
+  borderColor:'rgba(148,163,184,0.1)',
+  grid:{color:'rgba(42,53,85,0.6)'},
+};
+function mkChart(id,type,data,opts={}){
+  const c=document.getElementById(id);if(!c)return null;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(c,{type,data,options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},...opts}});
+  return charts[id];
+}
+function initCharts(){
+  Chart.defaults.color='#94a3b8';
+  mkChart('chartTxnVolume','bar',{
+    labels:Array(12).fill(0).map((_,i)=>i+'h ago').reverse(),
+    datasets:[{label:'Volume (PHP)',data:SIM.txnVolumeHistory,backgroundColor:'rgba(59,130,246,0.5)',borderColor:'#3b82f6',borderWidth:1}]
+  },{options:{scales:{y:{grid:{color:'rgba(42,53,85,0.6)'},ticks:{color:'#64748b'}}}}});
+
+  mkChart('chartAccountDist','doughnut',{
+    labels:['Savings','Checking','Credit'],
+    datasets:[{data:[60,25,15],backgroundColor:['#3b82f6','#10b981','#8b5cf6'],borderWidth:0}]
+  });
+  mkChart('chartTPS','line',{
+    labels:Array(60).fill(''),
+    datasets:[{label:'TPS',data:SIM.tpsHistory,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',tension:0.4,fill:true,pointRadius:0}]
+  },{scales:{y:{grid:{color:'rgba(42,53,85,0.6)'},ticks:{color:'#64748b'}},x:{display:false}}});
+  mkChart('chartRisk','bar',{
+    labels:['Low','Medium','High'],
+    datasets:[{data:[0,0,0],backgroundColor:['#10b981','#f59e0b','#ef4444']}]
+  });
+  mkChart('chartGrowth','line',{
+    labels:Array(20).fill(0).map((_,i)=>`T-${19-i}`),
+    datasets:[{label:'Balance (M PHP)',data:SIM.balanceHistory,borderColor:'#3b82f6',fill:true,backgroundColor:'rgba(59,130,246,0.08)',tension:0.4}]
+  });
+  mkChart('chartLoanStatus','pie',{
+    labels:['Active','Pending','Overdue','Defaulted','Paid'],
+    datasets:[{data:[0,0,0,0,0],backgroundColor:['#3b82f6','#8b5cf6','#f59e0b','#ef4444','#10b981'],borderWidth:0}]
+  });
+  mkChart('chartTxnTypes','bar',{
+    labels:TXN_TYPES,
+    datasets:[{data:TXN_TYPES.map(()=>rand(10,200)),backgroundColor:'rgba(139,92,246,0.6)',borderColor:'#8b5cf6',borderWidth:1}]
+  },{indexAxis:'y'});
+  mkChart('chartFraudRate','line',{
+    labels:Array(20).fill(0).map((_,i)=>`T-${19-i}`),
+    datasets:[{label:'Fraud Alerts',data:SIM.fraudRateHistory,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.1)',tension:0.4,fill:true}]
+  });
+  mkChart('chartGeo','bar',{
+    labels:REGIONS.slice(0,10),
+    datasets:[{label:'Transactions',data:REGIONS.slice(0,10).map(()=>rand(100,5000)),backgroundColor:'rgba(6,182,212,0.6)',borderColor:'#06b6d4',borderWidth:1}]
+  });
+  mkChart('chartGeoLoans','bar',{
+    labels:REGIONS.slice(0,8),
+    datasets:[{label:'Loans',data:REGIONS.slice(0,8).map(()=>rand(10,300)),backgroundColor:'rgba(245,158,11,0.6)',borderColor:'#f59e0b',borderWidth:1}]
+  });
+}
+function updateCharts(){
+  if(charts.chartTxnVolume){charts.chartTxnVolume.data.datasets[0].data=SIM.txnVolumeHistory;charts.chartTxnVolume.update('none')}
+  if(charts.chartTPS){charts.chartTPS.data.datasets[0].data=SIM.tpsHistory;charts.chartTPS.update('none')}
+  if(charts.chartRisk){
+    const l=SIM.users.filter(u=>u.risk<35).length,m=SIM.users.filter(u=>u.risk>=35&&u.risk<65).length,h=SIM.users.filter(u=>u.risk>=65).length;
+    charts.chartRisk.data.datasets[0].data=[l,m,h];charts.chartRisk.update('none');
+  }
+  if(charts.chartGrowth){charts.chartGrowth.data.datasets[0].data=SIM.balanceHistory;charts.chartGrowth.update('none')}
+  if(charts.chartLoanStatus){
+    const s=['Active','Pending','Overdue','Defaulted','Paid'].map(st=>SIM.loans.filter(l=>l.status===st).length);
+    charts.chartLoanStatus.data.datasets[0].data=s;charts.chartLoanStatus.update('none');
+  }
+  if(charts.chartFraudRate){charts.chartFraudRate.data.datasets[0].data=SIM.fraudRateHistory;charts.chartFraudRate.update('none')}
+}
+
+// ══════════════════════════════
+// RENDER TABLES
+// ══════════════════════════════
+function renderTopBalances(){
+  const el=document.getElementById('topBalancesTable');if(!el)return;
+  const top=[...SIM.users].sort((a,b)=>b.balance-a.balance).slice(0,8);
+  el.innerHTML=top.map(u=>`<tr class="clickable-row" onclick="viewUser(${u.id})">
+    <td><b>${u.name}</b><div class="text-xs text-muted">${u.region}</div></td>
+    <td class="mono text-xs">${u.account}</td>
+    <td class="currency positive">${fmt(u.balance)}</td>
+    <td><span class="badge ${riskBadgeClass(u.risk)}">${riskLabel(u.risk)}</span></td>
+  </tr>`).join('');
+}
+function renderRecentFraud(){
+  const el=document.getElementById('recentFraudTable');if(!el)return;
+  const recent=SIM.fraudAlerts.slice(0,8);
+  el.innerHTML=recent.length?recent.map(f=>`<tr>
+    <td><b>${f.user}</b></td>
+    <td class="text-xs">${f.reason.substring(0,30)}…</td>
+    <td class="currency negative">${fmt(f.amount)}</td>
+    <td><button class="btn btn-sm" style="background:rgba(59,130,246,0.15);color:var(--accent)" onclick="resolveAlert('${f.id}')">Resolve</button></td>
+  </tr>`).join(''):'<tr><td colspan="4" class="empty-state">No fraud alerts</td></tr>';
+}
+function renderUsersTable(){
+  const el=document.getElementById('usersTable');if(!el)return;
+  let list=[...SIM.users];
+  const f=document.getElementById('userFilter')?.value?.toLowerCase()||'';
+  const fs=document.getElementById('filterStatus')?.value||'';
+  const fr=document.getElementById('filterRisk')?.value||'';
+  const fg=document.getElementById('filterRegion')?.value||'';
+  if(f) list=list.filter(u=>u.name.toLowerCase().includes(f)||u.account.toLowerCase().includes(f));
+  if(fs) list=list.filter(u=>u.status===fs);
+  if(fr) list=list.filter(u=>riskLabel(u.risk)===fr);
+  if(fg) list=list.filter(u=>u.region===fg);
+  // Sort
+  list.sort((a,b)=>{
+    let va=a[SIM.sortField]||0,vb=b[SIM.sortField]||0;
+    if(typeof va==='string') va=va.toLowerCase();
+    if(typeof vb==='string') vb=vb.toLowerCase();
+    return va<vb?-SIM.sortDir:va>vb?SIM.sortDir:0;
+  });
+  document.getElementById('userTableCount').textContent=`Showing ${Math.min(100,list.length)} of ${list.length}`;
+  el.innerHTML=list.slice(0,100).map(u=>`<tr class="clickable-row" onclick="viewUser(${u.id})">
+    <td><div class="flex-center"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;min-width:28px">${u.firstName[0]}</div><div><b>${u.name}</b><div class="text-xs text-muted">${u.personality}</div></div></div></td>
+    <td class="mono text-xs">${u.account}</td>
+    <td class="text-xs">${u.region}</td>
+    <td class="currency ${u.balance>0?'positive':''}">${fmt(u.balance)}</td>
+    <td>${statusBadge(u.status)}</td>
+    <td><div class="flex-center"><div class="risk-bar"><div class="risk-fill" style="width:${u.risk}%;background:${riskColor(u.risk)}"></div></div><span class="text-xs" style="color:${riskColor(u.risk)}">${u.risk}</span></div></td>
+    <td>${kycBadge(u.kyc)}</td>
+    <td onclick="event.stopPropagation()">
+      <div class="flex" style="gap:4px">
+        <button class="btn btn-sm btn-ghost" onclick="viewUser(${u.id})">👁</button>
+        <button class="btn btn-sm" style="background:rgba(59,130,246,0.15);color:var(--accent)" onclick="editUser(${u.id})">✏️</button>
+        <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);color:var(--red)" onclick="toggleFreeze(${u.id})">${u.status==='Frozen'?'🔓':'❄️'}</button>
+      </div>
+    </td>
+  </tr>`).join('');
+  // Populate region filter
+  const regSelect=document.getElementById('filterRegion');
+  if(regSelect&&regSelect.options.length<=1) REGIONS.forEach(r=>{const o=document.createElement('option');o.value=r;o.text=r;regSelect.add(o)});
+}
+function sortUsers(field){SIM.sortField=field;SIM.sortDir*=-1;renderUsersTable()}
+
+function renderTxnTable(){
+  const el=document.getElementById('txnTable');if(!el)return;
+  let list=[...SIM.transactions];
+  const f=(document.getElementById('txnFilter')?.value||'').toLowerCase();
+  const ft=document.getElementById('txnTypeFilter')?.value||'';
+  const fs=document.getElementById('txnStatusFilter')?.value||'';
+  if(f) list=list.filter(t=>t.id.toLowerCase().includes(f)||t.from.toLowerCase().includes(f)||t.to.toLowerCase().includes(f));
+  if(ft) list=list.filter(t=>t.type===ft);
+  if(fs) list=list.filter(t=>t.status===fs);
+  const statusColor={Completed:'badge-active',Flagged:'badge-flagged',Failed:'badge-locked',Pending:'badge-pending'};
+  el.innerHTML=list.slice(0,150).map(t=>`<tr>
+    <td class="mono text-xs" style="color:var(--text3)">${t.id}</td>
+    <td class="text-xs text-muted">${t.time.split(',')[1]||t.time}</td>
+    <td><b class="text-sm">${t.from}</b></td>
+    <td class="text-sm">${t.to}</td>
+    <td><span style="font-size:11px;background:var(--surface3);padding:2px 8px;border-radius:4px">${t.type}</span></td>
+    <td class="currency ${t.type==='Deposit'||t.type==='Salary'?'positive':'negative'}">${t.currency==='USD'?fmtUSD(t.amount):fmt(t.amount)}</td>
+    <td><span class="badge ${statusColor[t.status]||'badge-pending'}">${t.status}</span></td>
+    <td onclick="event.stopPropagation()">
+      <button class="btn btn-sm btn-ghost" onclick="viewTxn('${t.id}')">👁</button>
+      ${SIM.currentRole!=='auditor'?`<button class="btn btn-sm btn-ghost" onclick="editTxn('${t.id}')">✏️</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+
+function renderLoansTable(){
+  const el=document.getElementById('loansTable');if(!el)return;
+  let list=[...SIM.loans];
+  const f=(document.getElementById('loanFilter')?.value||'').toLowerCase();
+  const fs=document.getElementById('loanStatusFilter')?.value||'';
+  const ft=document.getElementById('loanTypeFilter')?.value||'';
+  if(f) list=list.filter(l=>l.id.toLowerCase().includes(f)||l.borrower.toLowerCase().includes(f));
+  if(fs) list=list.filter(l=>l.status===fs);
+  if(ft) list=list.filter(l=>l.type===ft);
+  el.innerHTML=list.slice(0,100).map(l=>`<tr>
+    <td class="mono text-xs">${l.id}</td>
+    <td><b>${l.borrower}</b></td>
+    <td><span style="font-size:11px;background:var(--surface3);padding:2px 8px;border-radius:4px">${l.type}</span></td>
+    <td class="currency">${fmt(l.amount)}</td>
+    <td class="mono">${l.interest}%</td>
+    <td class="currency ${l.balance>0?'negative':''}">${fmt(l.balance)}</td>
+    <td>${loanBadge(l.status)}</td>
+    <td onclick="event.stopPropagation()">
+      <div class="flex" style="gap:4px">
+        <button class="btn btn-sm btn-ghost" onclick="viewLoan('${l.id}')">👁</button>
+        ${SIM.currentRole!=='auditor'?`<button class="btn btn-sm btn-success" style="background:rgba(16,185,129,0.15);color:var(--green)" onclick="changeLoanStatus('${l.id}','Paid')">✓ Paid</button>`:''}
+        ${l.status==='Pending'&&SIM.currentRole!=='auditor'?`<button class="btn btn-sm" style="background:rgba(59,130,246,0.15);color:var(--accent)" onclick="changeLoanStatus('${l.id}','Active')">Approve</button>`:''}
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function renderFraudTable(){
+  const el=document.getElementById('fraudTable');if(!el)return;
+  const list=SIM.fraudAlerts.filter(f=>!f.resolved).slice(0,100);
+  el.innerHTML=list.length?list.map(f=>`<tr>
+    <td><b>${f.user}</b><div class="text-xs mono">${f.account}</div></td>
+    <td class="text-xs">${f.txnId}</td>
+    <td class="text-xs">${f.reason}</td>
+    <td class="currency negative">${fmt(f.amount)}</td>
+    <td><span class="badge badge-${f.priority.toLowerCase()}">${f.priority}</span></td>
+    <td class="text-xs text-muted">${f.time.split(',')[1]||f.time}</td>
+    <td onclick="event.stopPropagation()">
+      <div class="flex" style="gap:4px">
+        <button class="btn btn-sm btn-ghost" onclick="resolveAlert('${f.id}')">✓ Resolve</button>
+        <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);color:var(--red)" onclick="freezeUser('${f.userId}')">❄️ Freeze</button>
+      </div>
+    </td>
+  </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">✅ No open fraud alerts</td></tr>';
+}
+
+function renderKycTable(){
+  const el=document.getElementById('kycTable');if(!el)return;
+  el.innerHTML=SIM.users.slice(0,100).map(u=>`<tr>
+    <td><b>${u.name}</b></td>
+    <td class="mono text-xs">${u.account}</td>
+    <td class="text-xs">${u.idType}</td>
+    <td>${kycBadge(u.kyc)}</td>
+    <td class="text-xs text-muted">${u.joined}</td>
+    <td>
+      <div class="flex" style="gap:4px">
+        <button class="btn btn-sm btn-success" style="background:rgba(16,185,129,0.15);color:var(--green)" onclick="setKYC(${u.id},'Verified')">✓</button>
+        <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);color:var(--red)" onclick="setKYC(${u.id},'Rejected')">✗</button>
+        <button class="btn btn-sm btn-ghost" onclick="setKYC(${u.id},'Pending')">⏳</button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function renderCardsTable(){
+  const el=document.getElementById('cardsTable');if(!el)return;
+  if(SIM.cards.length===0) SIM.users.slice(0,50).forEach(u=>generateCard(u));
+  const stateClass={Active:'badge-active',Blocked:'badge-locked',Expired:'badge-review'};
+  el.innerHTML=SIM.cards.slice(0,80).map(c=>`<tr>
+    <td class="mono text-xs">****-****-****-${c.number.slice(-4)}</td>
+    <td><b>${c.holder}</b></td>
+    <td><span style="font-size:11px;background:var(--surface3);padding:2px 8px;border-radius:4px">${c.type} ${c.tier}</span></td>
+    <td class="text-xs">${c.expiry}</td>
+    <td class="currency">${fmt(c.limit)}</td>
+    <td>
+      <div class="risk-bar" style="width:100px"><div class="risk-fill" style="width:${c.used*100}%;background:${c.used>0.8?'var(--red)':c.used>0.5?'var(--gold)':'var(--green)'}"></div></div>
+      <span class="text-xs text-muted">${(c.used*100).toFixed(0)}%</span>
+    </td>
+    <td><span class="badge ${stateClass[c.state]||'badge-active'}">${c.state}</span></td>
+    <td>
+      <button class="btn btn-sm btn-ghost" onclick="toggleCard('${c.id}')">${c.state==='Active'?'🚫 Block':'✓ Activate'}</button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderAuditTable(){
+  const el=document.getElementById('auditTable');if(!el)return;
+  el.innerHTML=SIM.auditLog.slice(0,200).map(a=>`<tr>
+    <td class="mono text-xs">${a.time}</td>
+    <td><b>${a.admin}</b><div class="text-xs text-muted">${a.role}</div></td>
+    <td><span style="font-size:11px;background:var(--surface3);padding:2px 8px;border-radius:4px">${a.action}</span></td>
+    <td class="text-xs">${a.target||'—'}</td>
+    <td class="text-xs text-muted">${a.details||'—'}</td>
+  </tr>`).join('');
+}
+
+function renderGeo(){
+  const el=document.getElementById('geoGrid');if(!el)return;
+  el.innerHTML=REGIONS.slice(0,8).map(r=>{
+    const count=SIM.users.filter(u=>u.region===r).length;
+    const loans=SIM.loans.filter(l=>SIM.users.find(u=>u.id===l.userId&&u.region===r)).length;
+    const pct=SIM.users.length?Math.round(count/SIM.users.length*100):0;
+    return`<div class="geo-card">
+      <div class="geo-name">${r}</div>
+      <div class="geo-bar"><div class="geo-bar-fill" style="width:${pct}%"></div></div>
+      <div class="geo-stat">${count} users · ${loans} loans</div>
+    </div>`;
+  }).join('');
+}
+
+function renderStaff(){
+  const el=document.getElementById('staffList');if(!el)return;
+  el.innerHTML=STAFF_NAMES.map(s=>`<div style="padding:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--green));display:flex;align-items:center;justify-content:center;font-size:14px">👤</div>
+    <div><div class="fw-600 text-sm">${s}</div><div class="text-xs text-muted">Active</div></div>
+    <div class="mono text-xs" style="margin-left:auto;color:var(--green)">●</div>
+  </div>`).join('');
+  const sa=document.getElementById('staffActions');if(!sa)return;
+  sa.innerHTML=SIM.staffLog.slice(0,20).map(a=>`<div class="feed-item transfer" style="margin-bottom:6px"><div class="text-sm">${a.text}</div><div class="feed-time">${a.time}</div></div>`).join('');
+}
+
+function renderAll(){renderUsersTable();renderTxnTable();renderLoansTable();renderFraudTable();renderKycTable();renderCardsTable()}
+
+// ══════════════════════════════
+// ACTIVITY FEED
+// ══════════════════════════════
+function addActivity(text, type='transfer'){
+  const item={text,type,time:now()};
+  SIM.activityFeed.unshift(item);
+  if(SIM.activityFeed.length>200) SIM.activityFeed.pop();
+  const fb=document.getElementById('feedBody');
+  if(fb){
+    const d=document.createElement('div');
+    d.className=`feed-item ${type}`;
+    d.innerHTML=`<div>${text}</div><div class="feed-time">${item.time}</div>`;
+    fb.insertBefore(d,fb.firstChild);
+    if(fb.children.length>50) fb.removeChild(fb.lastChild);
+  }
+}
+
+// ══════════════════════════════
+// TOASTS
+// ══════════════════════════════
+function toast(type,title,msg){
+  const icons={fraud:'🚨',success:'✅',warning:'⚠️',info:'ℹ️'};
+  const area=document.getElementById('toastArea');
+  const t=document.createElement('div');
+  t.className=`toast toast-${type}`;
+  t.innerHTML=`<div class="toast-icon">${icons[type]||'ℹ️'}</div><div class="toast-content"><p>${title}</p><span>${msg}</span></div>`;
+  t.onclick=()=>t.classList.add('exit');
+  area.appendChild(t);
+  setTimeout(()=>{t.classList.add('exit');setTimeout(()=>t.remove(),300)},4000);
+  if(area.children.length>5) area.removeChild(area.firstChild);
+}
+
+// ══════════════════════════════
+// MODAL SYSTEM
+// ══════════════════════════════
+function openModal(title,body,footer=''){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('modalFooter').innerHTML=footer;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open')}
+
+// ══════════════════════════════
+// USER ACTIONS
+// ══════════════════════════════
+function viewUser(id){
+  const u=SIM.users.find(x=>x.id===id);if(!u)return;
+  const userLoans=SIM.loans.filter(l=>l.userId===id);
+  const userTxns=SIM.transactions.filter(t=>t.from===u.name||t.to===u.name).slice(0,10);
+  openModal(`👤 ${u.name}`,`
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700">${u.firstName[0]}</div>
+      <div>
+        <h3>${u.name}</h3>
+        <div class="text-sm text-muted">${u.account} · ${u.region}</div>
+        <div style="margin-top:6px;display:flex;gap:6px">${statusBadge(u.status)}${kycBadge(u.kyc)}<span class="badge ${riskBadgeClass(u.risk)}">${riskLabel(u.risk)} Risk (${u.risk})</span></div>
+      </div>
+    </div>
+    <div class="grid-2" style="gap:12px;margin-bottom:16px">
+      <div><div class="text-xs text-muted">Balance (PHP)</div><div class="currency positive" style="font-size:18px">${fmt(u.balance)}</div></div>
+      <div><div class="text-xs text-muted">USD Balance</div><div class="currency" style="font-size:18px">${fmtUSD(u.usdBalance)}</div></div>
+      <div><div class="text-xs text-muted">Account Type</div><div class="fw-600">${u.accountType}</div></div>
+      <div><div class="text-xs text-muted">Personality</div><div class="fw-600">${u.personality}</div></div>
+      <div><div class="text-xs text-muted">Employer</div><div class="fw-600">${u.employer}</div></div>
+      <div><div class="text-xs text-muted">Credit Score</div><div class="fw-600 ${u.creditScore>700?'positive':u.creditScore>500?'':'negative'}">${u.creditScore}</div></div>
+      <div><div class="text-xs text-muted">Email</div><div class="text-sm">${u.email}</div></div>
+      <div><div class="text-xs text-muted">Phone</div><div class="text-sm mono">${u.phone}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="text-sm fw-600" style="margin-bottom:8px">Recent Transactions</div>
+    <div style="max-height:160px;overflow-y:auto">
+      ${userTxns.length?userTxns.map(t=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px"><span>${t.type} — ${t.to}</span><span class="${t.from===u.name?'negative':'positive'} mono">${t.from===u.name?'-':'+'} ${fmt(t.amount)}</span></div>`).join(''):'<div class="text-sm text-muted">No transactions</div>'}
+    </div>
+    <div class="divider"></div>
+    <div class="text-sm fw-600" style="margin-bottom:8px">Loans (${userLoans.length})</div>
+    ${userLoans.map(l=>`<div style="padding:8px;background:var(--surface2);border-radius:6px;margin-bottom:6px;font-size:12px"><div style="display:flex;justify-content:space-between"><span>${l.type} Loan — ${l.id}</span>${loanBadge(l.status)}</div><div class="mono" style="margin-top:4px">${fmt(l.balance)} remaining · ${l.interest}% interest</div></div>`).join('')||'<div class="text-sm text-muted">No loans</div>'}
+  `,`<button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
+    <button class="btn btn-sm" style="background:rgba(59,130,246,0.15);color:var(--accent)" onclick="closeModal();editUser(${id})">✏️ Edit User</button>
+    <button class="btn btn-primary btn-sm" onclick="closeModal();openAddLoanForUser(${id})">+ Issue Loan</button>`);
+}
+
+function editUser(id){
+  const u=SIM.users.find(x=>x.id===id);if(!u)return;
+  openModal(`✏️ Edit User — ${u.name}`,`
+    <div class="form-row">
+      <div class="field-group"><label>First Name</label><input id="eu_fn" value="${u.firstName}"></div>
+      <div class="field-group"><label>Last Name</label><input id="eu_ln" value="${u.lastName}"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Balance (PHP)</label><input id="eu_bal" type="number" value="${u.balance.toFixed(2)}"></div>
+      <div class="field-group"><label>USD Balance</label><input id="eu_usd" type="number" value="${u.usdBalance.toFixed(2)}"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Status</label><select id="eu_status"><option ${u.status==='Active'?'selected':''}>Active</option><option ${u.status==='Frozen'?'selected':''}>Frozen</option><option ${u.status==='Locked'?'selected':''}>Locked</option><option ${u.status==='Under Review'?'selected':''}>Under Review</option></select></div>
+      <div class="field-group"><label>KYC</label><select id="eu_kyc"><option ${u.kyc==='Verified'?'selected':''}>Verified</option><option ${u.kyc==='Pending'?'selected':''}>Pending</option><option ${u.kyc==='Rejected'?'selected':''}>Rejected</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Risk Score (0-100)</label><input id="eu_risk" type="number" min="0" max="100" value="${u.risk}"></div>
+      <div class="field-group"><label>Credit Score</label><input id="eu_credit" type="number" min="300" max="850" value="${u.creditScore}"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Region</label><select id="eu_region">${REGIONS.map(r=>`<option ${u.region===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="field-group"><label>Account Type</label><select id="eu_type"><option ${u.accountType==='Savings'?'selected':''}>Savings</option><option ${u.accountType==='Checking'?'selected':''}>Checking</option><option ${u.accountType==='Credit'?'selected':''}>Credit</option></select></div>
+    </div>`,
+  `<button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+   <button class="btn btn-primary btn-sm" onclick="saveUser(${id})">💾 Save Changes</button>`);
+}
+
+function saveUser(id){
+  if(SIM.currentRole==='auditor'){toast('warning','Access Denied','Auditors cannot edit');return}
+  const u=SIM.users.find(x=>x.id===id);if(!u)return;
+  requireOTP(()=>{
+    u.firstName=document.getElementById('eu_fn').value;
+    u.lastName=document.getElementById('eu_ln').value;
+    u.name=`${u.firstName} ${u.lastName}`;
+    u.balance=parseFloat(document.getElementById('eu_bal').value)||u.balance;
+    u.usdBalance=parseFloat(document.getElementById('eu_usd').value)||0;
+    u.status=document.getElementById('eu_status').value;
+    u.kyc=document.getElementById('eu_kyc').value;
+    u.risk=parseInt(document.getElementById('eu_risk').value)||u.risk;
+    u.creditScore=parseInt(document.getElementById('eu_credit').value)||u.creditScore;
+    u.region=document.getElementById('eu_region').value;
+    u.accountType=document.getElementById('eu_type').value;
+    audit('Edit User',u.name,`Balance updated, status=${u.status}`);
+    closeModal();
+    toast('success','User Updated',`${u.name}'s profile saved`);
+  });
+}
+
+function openAddUser(){
+  if(SIM.currentRole==='auditor'){toast('warning','Access Denied','Auditors cannot add users');return}
+  openModal('➕ Add New User',`
+    <div class="form-row">
+      <div class="field-group"><label>First Name</label><input id="au_fn" placeholder="Juan"></div>
+      <div class="field-group"><label>Last Name</label><input id="au_ln" placeholder="Dela Cruz"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Initial Balance (PHP)</label><input id="au_bal" type="number" value="10000"></div>
+      <div class="field-group"><label>Account Type</label><select id="au_type"><option>Savings</option><option>Checking</option><option>Credit</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Region</label><select id="au_reg">${REGIONS.map(r=>`<option>${r}</option>`).join('')}</select></div>
+      <div class="field-group"><label>KYC Status</label><select id="au_kyc"><option>Pending</option><option>Verified</option></select></div>
+    </div>`,
+  `<button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+   <button class="btn btn-primary btn-sm" onclick="addUserManual()">➕ Add User</button>`);
+}
+
+function addUserManual(){
+  const fn=document.getElementById('au_fn').value||rndItem(FIRST_NAMES);
+  const ln=document.getElementById('au_ln').value||rndItem(LAST_NAMES);
+  const bal=parseFloat(document.getElementById('au_bal').value)||10000;
+  const type=document.getElementById('au_type').value;
+  const region=document.getElementById('au_reg').value;
+  const kyc=document.getElementById('au_kyc').value;
+  const u=generateUser({firstName:fn,lastName:ln,name:`${fn} ${ln}`,balance:bal,accountType:type,region,kyc});
+  SIM.users.push(u);
+  SIM.usersSinceLogin++;
+  audit('Add User',u.name,'Manual user creation');
+  closeModal();
+  toast('success','User Added',`${u.name} added successfully`);
+}
+
+function toggleFreeze(id){
+  if(SIM.currentRole==='auditor'){toast('warning','Access Denied','Auditors cannot freeze accounts');return}
+  const u=SIM.users.find(x=>x.id===id);if(!u)return;
+  u.status=u.status==='Frozen'?'Active':'Frozen';
+  audit('Freeze/Unfreeze',u.name,`Status: ${u.status}`);
+  toast('info',`Account ${u.status}`,u.name);
+}
+
+function freezeUser(userId){
+  const u=SIM.users.find(x=>x.id==userId);if(!u)return;
+  u.status='Frozen';audit('Freeze',u.name,'Auto-freeze from fraud');toast('warning','Account Frozen',u.name);
+}
+
+function resolveAlert(id){
+  const f=SIM.fraudAlerts.find(x=>x.id===id);if(!f)return;
+  f.resolved=true;SIM.resolvedFraud++;
+  audit('Resolve Fraud',f.user,f.reason);
+  toast('success','Alert Resolved',`Fraud alert for ${f.user} cleared`);
+  updateFraudBadge();
+}
+
+function clearFraud(){SIM.fraudAlerts=SIM.fraudAlerts.filter(f=>!f.resolved);toast('info','Cleared','Resolved alerts removed')}
+function freezeAllFlagged(){
+  SIM.fraudAlerts.filter(f=>!f.resolved).forEach(f=>{
+    const u=SIM.users.find(x=>x.id===f.userId);
+    if(u) u.status='Frozen';
+  });
+  toast('warning','All Flagged Frozen','Accounts frozen');
+}
+
+function setKYC(id,status){
+  const u=SIM.users.find(x=>x.id===id);if(!u)return;
+  u.kyc=status;audit('KYC Update',u.name,`KYC set to ${status}`);
+  toast('success','KYC Updated',`${u.name}: ${status}`);
+}
+
+function approveAllKYC(){
+  SIM.users.filter(u=>u.kyc==='Pending').forEach(u=>u.kyc='Verified');
+  audit('Bulk KYC','All Pending','Approved all pending KYC');
+  toast('success','KYC Approved','All pending KYC verified');
+}
+
+function changeLoanStatus(id,status){
+  const l=SIM.loans.find(x=>x.id===id);if(!l)return;
+  l.status=status;audit('Loan Status',l.borrower,`${l.id} → ${status}`);
+  toast('success','Loan Updated',`${l.id} marked as ${status}`);
+}
+
+function approvePendingLoans(){
+  SIM.loans.filter(l=>l.status==='Pending').forEach(l=>l.status='Active');
+  toast('success','Loans Approved','All pending loans activated');
+}
+
+function openAddLoan(){
+  openModal('➕ Issue Loan',`
+    <div class="form-row">
+      <div class="field-group"><label>Borrower Name</label><input id="al_name" placeholder="Type name…" list="userList"><datalist id="userList">${SIM.users.slice(0,50).map(u=>`<option value="${u.name}">`).join('')}</datalist></div>
+      <div class="field-group"><label>Loan Type</label><select id="al_type"><option>Personal</option><option>Car</option><option>Home</option><option>Business</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Amount (PHP)</label><input id="al_amount" type="number" value="50000"></div>
+      <div class="field-group"><label>Interest Rate (%)</label><input id="al_int" type="number" value="${SIM.interestRate}" step="0.1"></div>
+    </div>
+    <div class="field-group"><label>Term (months)</label><input id="al_months" type="number" value="24"></div>`,
+  `<button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+   <button class="btn btn-primary btn-sm" onclick="addLoanManual()">Issue Loan</button>`);
+}
+
+function openAddLoanForUser(id){
+  const u=SIM.users.find(x=>x.id===id);if(!u)return;
+  openAddLoan();
+  setTimeout(()=>{const el=document.getElementById('al_name');if(el)el.value=u.name},50);
+}
+
+function addLoanManual(){
+  const name=document.getElementById('al_name').value;
+  const u=SIM.users.find(x=>x.name===name)||rndItem(SIM.users);
+  if(!u){toast('warning','User not found','Check the name');return}
+  const l=generateLoan(u,{
+    type:document.getElementById('al_type').value,
+    amount:parseFloat(document.getElementById('al_amount').value),
+    interest:parseFloat(document.getElementById('al_int').value),
+    months:parseInt(document.getElementById('al_months').value)
+  });
+  audit('Issue Loan',u.name,`${l.type} ₱${l.amount}`);
+  closeModal();
+  toast('success','Loan Issued',`${l.id} for ${u.name}`);
+}
+
+function openManualTxn(){
+  openModal('💸 Manual Transaction',`
+    <div class="form-row">
+      <div class="field-group"><label>From (Name/Account)</label><input id="mt_from" placeholder="Leave blank for system"></div>
+      <div class="field-group"><label>To</label><input id="mt_to" placeholder="Name or external"></div>
+    </div>
+    <div class="form-row">
+      <div class="field-group"><label>Type</label><select id="mt_type">${TXN_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
+      <div class="field-group"><label>Amount (PHP)</label><input id="mt_amount" type="number" value="5000"></div>
+    </div>`,
+  `<button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+   <button class="btn btn-primary btn-sm" onclick="doManualTxn()">💸 Execute</button>`);
+}
+
+function doManualTxn(){
+  const fromName=document.getElementById('mt_from').value;
+  const fromUser=SIM.users.find(u=>u.name.toLowerCase().includes(fromName.toLowerCase()))||null;
+  const toName=document.getElementById('mt_to').value;
+  const toUser=SIM.users.find(u=>u.name.toLowerCase().includes(toName.toLowerCase()))||null;
+  const type=document.getElementById('mt_type').value;
+  const amount=parseFloat(document.getElementById('mt_amount').value)||1000;
+  const t=generateTransaction(fromUser,toUser,type,amount);
+  audit('Manual Transaction',fromUser?fromUser.name:'System',`${type} ${fmt(amount)}`);
+  closeModal();
+  toast('success','Transaction Executed',`${t.id} — ${fmt(amount)}`);
+}
+
+function viewTxn(id){
+  const t=SIM.transactions.find(x=>x.id===id);if(!t)return;
+  openModal(`💸 Transaction — ${t.id}`,`
+    <div class="grid-2" style="gap:12px">
+      <div><div class="text-xs text-muted">Transaction ID</div><div class="mono fw-600">${t.id}</div></div>
+      <div><div class="text-xs text-muted">Time</div><div class="text-sm">${t.time}</div></div>
+      <div><div class="text-xs text-muted">From</div><div class="fw-600">${t.from}</div><div class="mono text-xs text-muted">${t.fromAccount}</div></div>
+      <div><div class="text-xs text-muted">To</div><div class="fw-600">${t.to}</div></div>
+      <div><div class="text-xs text-muted">Type</div><div class="fw-600">${t.type}</div></div>
+      <div><div class="text-xs text-muted">Amount</div><div class="currency positive" style="font-size:18px">${t.currency==='USD'?fmtUSD(t.amount):fmt(t.amount)}</div></div>
+      <div><div class="text-xs text-muted">Fee</div><div class="currency negative">${fmt(t.fee)}</div></div>
+      <div><div class="text-xs text-muted">Status</div><span class="badge ${t.flagged?'badge-flagged':'badge-active'}">${t.status}</span></div>
+      <div><div class="text-xs text-muted">Bank</div><div class="fw-600">${t.bank}</div></div>
+    </div>`,
+  `<button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>`);
+}
+
+function editTxn(id){
+  const t=SIM.transactions.find(x=>x.id===id);if(!t)return;
+  openModal(`✏️ Edit Transaction — ${t.id}`,`
+    <div class="field-group"><label>Amount (PHP)</label><input id="et_amount" type="number" value="${t.amount}"></div>
+    <div class="field-group"><label>Status</label><select id="et_status"><option ${t.status==='Completed'?'selected':''}>Completed</option><option ${t.status==='Pending'?'selected':''}>Pending</option><option ${t.status==='Failed'?'selected':''}>Failed</option><option ${t.status==='Flagged'?'selected':''}>Flagged</option></select></div>
+    <p style="font-size:11px;color:var(--text3);margin-top:8px">Original amount: ${fmt(t.originalAmount)}</p>`,
+  `<button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+   <button class="btn btn-primary btn-sm" onclick="saveTxn('${t.id}')">💾 Save</button>`);
+}
+
+function saveTxn(id){
+  const t=SIM.transactions.find(x=>x.id===id);if(!t)return;
+  t.amount=parseFloat(document.getElementById('et_amount').value)||t.amount;
+  t.status=document.getElementById('et_status').value;
+  t.edited=true;
+  audit('Edit Transaction',t.id,`Amount changed to ${fmt(t.amount)}`);
+  closeModal();toast('success','Transaction Updated',t.id);
+}
+
+function viewLoan(id){
+  const l=SIM.loans.find(x=>x.id===id);if(!l)return;
+  const pct=Math.max(0,Math.min(100,((l.amount-l.balance)/l.amount*100)));
+  openModal(`🏛️ Loan — ${l.id}`,`
+    <div class="grid-2" style="gap:12px">
+      <div><div class="text-xs text-muted">Borrower</div><div class="fw-600">${l.borrower}</div></div>
+      <div><div class="text-xs text-muted">Type</div><div class="fw-600">${l.type} Loan</div></div>
+      <div><div class="text-xs text-muted">Principal</div><div class="currency">${fmt(l.amount)}</div></div>
+      <div><div class="text-xs text-muted">Remaining</div><div class="currency negative">${fmt(l.balance)}</div></div>
+      <div><div class="text-xs text-muted">Interest Rate</div><div class="fw-600">${l.interest}% p.a.</div></div>
+      <div><div class="text-xs text-muted">Monthly Payment</div><div class="currency">${fmt(l.monthlyPayment)}</div></div>
+      <div><div class="text-xs text-muted">Missed Payments</div><div class="fw-600 ${l.missedPayments>0?'negative':''}">${l.missedPayments}</div></div>
+      <div><div class="text-xs text-muted">Penalties</div><div class="currency negative">${fmt(l.penalties)}</div></div>
+    </div>
+    <div style="margin-top:16px"><div class="text-xs text-muted" style="margin-bottom:6px">Repayment Progress</div>
+    <div class="loan-progress"><div class="loan-progress-fill" style="width:${pct}%"></div></div>
+    <div class="text-xs text-muted" style="margin-top:4px">${pct.toFixed(1)}% paid · ${l.paidMonths}/${l.months} months</div></div>
+    <div style="margin-top:12px">${loanBadge(l.status)}</div>`,
+  `<button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
+   <button class="btn btn-success btn-sm" onclick="changeLoanStatus('${l.id}','Paid');closeModal()">✓ Mark Paid</button>`);
+}
+
+function issueCard(){
+  const u=rndItem(SIM.users);if(!u)return;
+  generateCard(u);toast('success','Card Issued',`New card issued to ${u.name}`);
+}
+function toggleCard(id){
+  const c=SIM.cards.find(x=>x.id===id);if(!c)return;
+  c.state=c.state==='Active'?'Blocked':'Active';
+  toast('info',`Card ${c.state}`,`****-${c.number.slice(-4)}`);
+}
+
+function exportCSV(){
+  const rows=[['Name','Account','Region','Balance','Status','Risk','KYC'],...SIM.users.slice(0,500).map(u=>[u.name,u.account,u.region,u.balance.toFixed(2),u.status,riskLabel(u.risk),u.kyc])];
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='bancopilipinas_users.csv';a.click();
+  audit('Export CSV','All Users','Exported user data');
+  toast('success','Export Ready','CSV downloaded');
+}
+
+// ══════════════════════════════
+// OTP SYSTEM
+// ══════════════════════════════
+let otpCallback=null, otpCode='';
+function requireOTP(cb){
+  if(SIM.currentRole==='auditor'){cb();return}
+  otpCode=String(rand(100000,999999));
+  otpCallback=cb;
+  document.getElementById('otpDisplay').textContent=otpCode;
+  const digs=document.getElementById('otpDigits');
+  digs.innerHTML=Array(6).fill(0).map((_,i)=>`<input class="otp-digit" maxlength="1" id="od${i}" oninput="otpNext(${i})" type="text" inputmode="numeric" pattern="[0-9]">`).join('');
+  document.getElementById('otpModal').style.display='flex';
+  setTimeout(()=>document.getElementById('od0')?.focus(),100);
+}
+function otpNext(i){const v=document.getElementById(`od${i}`).value;if(v&&i<5)document.getElementById(`od${i+1}`)?.focus()}
+function verifyOtp(){
+  const entered=Array(6).fill(0).map((_,i)=>document.getElementById(`od${i}`)?.value||'').join('');
+  if(entered===otpCode){document.getElementById('otpModal').style.display='none';if(otpCallback)otpCallback();}
+  else toast('fraud','Invalid OTP','Please try again');
+}
+function closeOtp(){document.getElementById('otpModal').style.display='none'}
+
+// ══════════════════════════════
+// SIMULATION CONTROLS
+// ══════════════════════════════
+function updateSpeed(v){SIM.speed=parseInt(v);document.getElementById('lblSpeed').textContent=v+'×';document.getElementById('speedBadge').textContent=v+'×';startSim()}
+function cycleSpeed(){const s=[1,5,10,25,50,100];const cur=s.indexOf(SIM.speed);const next=s[(cur+1)%s.length];document.getElementById('sliderSpeed').value=next;updateSpeed(next)}
+function updateFraudRate(v){SIM.fraudRate=parseInt(v);document.getElementById('lblFraud').textContent=v+'%'}
+function updateUserRate(v){SIM.userRate=parseInt(v);document.getElementById('lblUsers').textContent=v}
+function updateLoanStrict(v){SIM.loanStrictness=parseInt(v);document.getElementById('lblLoan').textContent=['Easy','Medium','Strict'][v]}
+function updateInterest(v){SIM.interestRate=parseInt(v);document.getElementById('lblInterest').textContent=v+'%'}
+function toggleChaosMode(on){SIM.chaosMode=on;document.body.classList.toggle('chaos',on);if(on)toast('fraud','⚡ CHAOS MODE','System entering chaos state!');else toast('success','Chaos Ended','System stabilizing...')}
+function triggerCrash(on){SIM.economicCrash=on;if(on){SIM.users.forEach(u=>{u.balance*=0.7});SIM.loans.filter(l=>l.status==='Active').forEach(l=>l.status='Overdue');toast('fraud','📉 ECONOMIC CRASH','Mass defaults triggered!');addActivity('📉 Economic crash: mass defaults and balance drops','alert')}else toast('success','Recovery','Economy recovering...')}
+
+function triggerEvent(type){
+  const events={
+    typhoon:()=>{const region=rndItem(REGIONS);SIM.users.filter(u=>u.region===region).forEach(u=>u.status='Under Review');toast('warning','🌀 Typhoon',`Regional disruption in ${region}`);addActivity(`🌀 Typhoon hit ${region} — accounts under review`,'alert')},
+    fraud_spike:()=>{document.getElementById('sliderFraud').value=40;updateFraudRate(40);toast('fraud','💥 Fraud Spike','Fraud rate spiked to 40%!');addActivity('💥 Fraud spike detected system-wide','fraud')},
+    bank_run:()=>{SIM.users.slice(0,50).forEach(u=>{generateTransaction(u,null,'Withdraw',u.balance*0.3)});toast('fraud','🏃 Bank Run','Mass withdrawal detected!')},
+    salary:()=>{SIM.users.forEach(u=>{generateTransaction(null,u,'Salary',rndFloat(15000,80000))});toast('success','💰 Salary Day','Mass salary deposits processed')},
+    rate_cut:()=>{SIM.interestRate=Math.max(1,SIM.interestRate-2);toast('success','📉 Rate Cut',`Interest now ${SIM.interestRate}%`)},
+    maintenance:()=>{SIM.maintenanceMode=!SIM.maintenanceMode;toast('info','🔧 Maintenance',SIM.maintenanceMode?'System paused':'System resumed')}
+  };
+  events[type]?.();
+  audit('Trigger Event','System',type);
+}
+
+// ══════════════════════════════
+// AUDIT LOG
+// ══════════════════════════════
+function audit(action,target,details){
+  SIM.auditLog.unshift({time:nowFull(),admin:SIM.currentUser,role:SIM.currentRole,action,target,details});
+  if(SIM.auditLog.length>1000) SIM.auditLog.pop();
+  // Staff log
+  SIM.staffLog.unshift({text:`${rndItem(STAFF_NAMES)}: ${action} — ${target}`,time:now()});
+  if(SIM.staffLog.length>100) SIM.staffLog.pop();
+}
+
+// ══════════════════════════════
+// NAVIGATION
+// ══════════════════════════════
+function showPage(name, navEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const page=document.getElementById('page-'+name);
+  if(page){page.classList.add('active')}
+  if(navEl) navEl.classList.add('active');
+  document.getElementById('breadcrumb').innerHTML=`<span>BancoPilipinas</span><span class="breadcrumb-sep">›</span><span class="active">${name.charAt(0).toUpperCase()+name.slice(1)}</span>`;
+  renderAll();
+}
+
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const tog=document.getElementById('sidebarToggle');
+  sb.classList.toggle('collapsed');
+  tog.textContent=sb.classList.contains('collapsed')?'▶':'◀';
+}
+
+function toggleFeed(){document.getElementById('activityFeed').classList.toggle('open')}
+
+// ══════════════════════════════
+// SEARCH
+// ══════════════════════════════
+function handleSearch(q){
+  const box=document.getElementById('searchResults');
+  if(!q||q.length<2){box.style.display='none';return}
+  const results=[];
+  SIM.users.filter(u=>u.name.toLowerCase().includes(q.toLowerCase())||u.account.includes(q)).slice(0,5).forEach(u=>results.push({type:'User',label:u.name,sub:u.account,action:`viewUser(${u.id})`}));
+  SIM.transactions.filter(t=>t.id.includes(q.toUpperCase())||t.from.toLowerCase().includes(q.toLowerCase())).slice(0,3).forEach(t=>results.push({type:'TXN',label:t.id,sub:`${t.from} → ${t.to}`,action:`viewTxn('${t.id}')`}));
+  SIM.loans.filter(l=>l.id.includes(q.toUpperCase())||l.borrower.toLowerCase().includes(q.toLowerCase())).slice(0,3).forEach(l=>results.push({type:'Loan',label:l.id,sub:l.borrower,action:`viewLoan('${l.id}')`}));
+  box.style.display=results.length?'block':'none';
+  box.innerHTML=results.map(r=>`<div class="search-item" onclick="${r.action};document.getElementById('globalSearch').value='';document.getElementById('searchResults').style.display='none'"><span class="search-item-type">${r.type}</span><div><div class="text-sm fw-600">${r.label}</div><div class="text-xs text-muted">${r.sub}</div></div></div>`).join('')||'<div class="search-item text-muted">No results</div>';
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.topbar-search'))document.getElementById('searchResults').style.display='none'});
+
+// ══════════════════════════════
+// COMMAND PALETTE
+// ══════════════════════════════
+const COMMANDS=[
+  {label:'Go to Dashboard',key:'G D',action:()=>showPage('dashboard',null)},
+  {label:'Go to Users',key:'G U',action:()=>showPage('users',null)},
+  {label:'Go to Fraud Center',key:'G F',action:()=>showPage('fraud',null)},
+  {label:'Toggle Chaos Mode',key:'C',action:()=>toggleChaosMode(!SIM.chaosMode)},
+  {label:'Freeze All Flagged',key:'',action:freezeAllFlagged},
+  {label:'Generate 1000 Users',key:'',action:()=>generateBulkUsers(1000)},
+  {label:'Add User',key:'A U',action:openAddUser},
+  {label:'Issue Loan',key:'A L',action:openAddLoan},
+  {label:'Manual Transaction',key:'A T',action:openManualTxn},
+  {label:'Approve All KYC',key:'',action:approveAllKYC},
+  {label:'Trigger Fraud Spike',key:'',action:()=>triggerEvent('fraud_spike')},
+  {label:'Trigger Salary Deposits',key:'',action:()=>triggerEvent('salary')},
+  {label:'Export CSV',key:'',action:exportCSV},
+];
+function openCmdPalette(){document.getElementById('cmdPalette').classList.add('open');document.getElementById('cmdInput').value='';filterCmds('');document.getElementById('cmdInput').focus()}
+function closeCmdPalette(){document.getElementById('cmdPalette').classList.remove('open')}
+function filterCmds(q){
+  const res=COMMANDS.filter(c=>!q||c.label.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('cmdResults').innerHTML=res.map((c,i)=>`<div class="cmd-item" onclick="${i};executeCmdAt(${COMMANDS.indexOf(c)})">${c.label}${c.key?`<span class="cmd-item-key">${c.key}</span>`:''}</div>`).join('');
+}
+function executeCmdAt(i){COMMANDS[i]?.action();closeCmdPalette()}
+function cmdKeydown(e){if(e.key==='Escape')closeCmdPalette();if(e.key==='Enter'){const first=document.querySelector('.cmd-item');if(first)first.click()}}
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openCmdPalette()}
+  if(e.key==='Escape')closeCmdPalette();
+});
+
+// ══════════════════════════════
+// LOGIN
+// ══════════════════════════════
+function doLogin(){
+  const u=document.getElementById('loginUser').value;
+  const p=document.getElementById('loginPass').value;
+  const role=document.getElementById('loginRole').value;
+  if(u==='admin'&&p==='admin'){
+    SIM.currentUser=u;SIM.currentRole=role;
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.getElementById('userName').textContent=u==='admin'?'Administrator':u;
+    document.getElementById('userRole').textContent=role==='superadmin'?'Super Admin':role==='staff'?'Staff/Teller':'Auditor';
+    audit('Login','System',`Role: ${role}`);
+    initSim();
+    initCharts();
+    setTimeout(()=>{startSim();toast('success','Welcome Back','BancoPilipinas system online 🏦')},400);
+  } else toast('fraud','Login Failed','Invalid credentials');
+}
+function logout(){document.getElementById('app').style.display='none';document.getElementById('loginScreen').style.display='flex';if(simInterval)clearInterval(simInterval)}
+
+// ══════════════════════════════
+// INIT
+// ══════════════════════════════
+function initSim(){
+  // Seed initial users
+  const seed=250;
+  for(let i=0;i<seed;i++) SIM.users.push(generateUser());
+  // Seed loans
+  for(let i=0;i<80;i++){
+    const u=rndItem(SIM.users);
+    generateLoan(u);
+  }
+  // Seed transactions
+  for(let i=0;i<300;i++){
+    const u=rndItem(SIM.users);
+    const type=rndItem(TXN_TYPES);
+    const to=type==='Transfer'?rndItem(SIM.users.filter(x=>x.id!==u.id)):null;
+    generateTransaction(u,to,type,rndFloat(500,50000));
+  }
+  // Seed cards
+  SIM.users.slice(0,80).forEach(u=>generateCard(u));
+  // Seed some fraud alerts
+  for(let i=0;i<12;i++){
+    const u=rndItem(SIM.users);
+    flagFraud(u,{amount:rndFloat(5000,999999)},rndItem(FRAUD_REASONS));
+  }
+  // Balance history
+  const base=SIM.users.reduce((a,u)=>a+u.balance,0)/1000000;
+  SIM.balanceHistory=Array(20).fill(0).map((_,i)=>parseFloat((base*(0.7+i*0.015+Math.random()*0.05)).toFixed(2)));
+  SIM.fraudRateHistory=Array(20).fill(0).map(()=>rand(0,15));
+  SIM.txnVolumeHistory=Array(12).fill(0).map(()=>rand(1000000,20000000));
+  SIM.usersSinceLogin=0;
+  updateFraudBadge();
+  renderAll();
+}
+
+// Enter key on login
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+</script>
+</body>
+</html>
